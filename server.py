@@ -174,7 +174,7 @@ class Store:
         value["dictionary"] = {k: game.SOURCES[language][k] for k in ("edition", "words")}
         value["premiums"] = game.PREMIUMS
         value["tiles"] = {letter: {"count": count, "points": points}
-                          for letter,(count,points) in zip(game.LETTERS,game.TILES[language])}
+                          for letter,(count,points) in zip(game.ALPHABETS[language],game.TILES[language])}
         return value
 
     def room(self, sid, code, focused=None):

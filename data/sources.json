@@ -54,5 +54,29 @@
       "missing": 0,
       "extra": 0
     }
+  },
+  "es": {
+    "edition": "FILE 2017",
+    "source": "https://github.com/woogles-io/liwords/blob/master/liwords-ui/public/wasm/2024/FILE2017.kwg",
+    "words": 639293,
+    "sha256": "9e489aaaccbb9f7a0fc65618ddaec421f2e58e4b356ac1b2d5c88cea83e74f1d",
+    "source_sha256": "48976d0b14915a613afcbbce7246bddadee34ce691083204989dcf11f287ea15",
+    "length_unit": "tiles (CH, LL, RR count as one)",
+    "length_counts": {
+      "2": 91,
+      "3": 548,
+      "4": 3509,
+      "5": 12271,
+      "6": 28148,
+      "7": 53124,
+      "8": 78295,
+      "9": 98579,
+      "10": 105182,
+      "11": 93829,
+      "12": 72813,
+      "13": 49325,
+      "14": 28798,
+      "15": 14781
+    }
   }
 }

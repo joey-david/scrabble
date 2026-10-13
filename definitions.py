@@ -9,8 +9,9 @@ from urllib.request import Request, urlopen
 
 
 def normalized(word):
-    return "".join(c for c in unicodedata.normalize("NFKD", word.replace("œ", "oe"))
-                   if not unicodedata.combining(c)).upper()
+    word = word.replace("œ", "oe").replace("ñ", "\ue000").replace("Ñ", "\ue000")
+    return "".join(c for c in unicodedata.normalize("NFKD", word)
+                   if not unicodedata.combining(c)).replace("\ue000","Ñ").upper()
 
 
 def fetch(url):
@@ -20,14 +21,23 @@ def fetch(url):
 
 
 class Senses(HTMLParser):
-    def __init__(self):
+    def __init__(self, definition_list=False):
         super().__init__()
         self.depth = 0
         self.items = []
         self.senses = []
         self.skip = 0
+        self.definition_list = definition_list
+        self.in_term = False
+        self.term = ""
+        self.next_definition = False
 
     def handle_starttag(self, tag, attrs):
+        if self.definition_list and tag == "dt":
+            self.in_term, self.term = True, ""
+        if self.definition_list and tag == "dd" and self.next_definition and not self.depth:
+            self.depth, self.next_definition = 1, False
+            self.items.append({"parts": [], "done": False})
         if tag == "ol":
             self.capture()
             self.depth += 1
@@ -37,6 +47,13 @@ class Senses(HTMLParser):
             self.skip += 1
 
     def handle_endtag(self, tag):
+        if self.definition_list and tag == "dt":
+            self.in_term = False
+            self.next_definition = bool(re.match(r"^\s*\d+\b", self.term))
+        if self.definition_list and tag == "dd" and self.depth and not self.skip:
+            self.capture()
+            self.items.pop()
+            self.depth = 0
         if tag in ("ul", "dl", "style", "script") and self.skip:
             self.skip -= 1
         if tag == "li" and self.depth and not self.skip and self.items:
@@ -46,6 +63,8 @@ class Senses(HTMLParser):
             self.depth -= 1
 
     def handle_data(self, data):
+        if self.in_term:
+            self.term += data
         if self.items and not self.skip and not self.items[-1]["done"]:
             self.items[-1]["parts"].append(data)
 
@@ -66,9 +85,10 @@ def lookup(language, word):
         keys.extend(page["key"] for page in result["pages"] if normalized(page["key"]) == word)
     except (OSError, ValueError, KeyError):
         pass
-    marker = "fr" if language == "fr" else "English"
+    marker = {"fr":"fr", "en":"English", "es":"Español"}[language]
     # Prefer lexical entries over an all-capitals acronym and preserve accents.
-    keys = sorted(dict.fromkeys(keys), key=lambda key: (key[0].isupper(), key == word.lower()))
+    keys = sorted(dict.fromkeys(keys), key=lambda key: (key[0].isupper(),
+                  key != word.lower() if language == "es" else key == word.lower()))
     for key in keys:
         try:
             html = fetch(base + "/w/rest.php/v1/page/" + quote(key, safe="") + "/html")
@@ -77,7 +97,7 @@ def lookup(language, word):
                 continue
             section = html[match.end():]
             section = section.split("<h2", 1)[0]
-            parser = Senses()
+            parser = Senses(definition_list=language == "es")
             parser.feed(section)
             if parser.senses:
                 return {"word": word, "text": parser.senses[0],

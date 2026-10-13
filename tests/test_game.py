@@ -3,6 +3,7 @@ import unittest
 from collections import Counter
 
 import game
+import definitions
 
 
 def fixture(language="en"):
@@ -13,7 +14,7 @@ def fixture(language="en"):
 
 
 def rack(player,letters,language="en"):
-    player["rack"] = [{"id":str(i),"letter":c,"points":dict(zip(game.LETTERS,game.TILES[language]))[c][1]}
+    player["rack"] = [{"id":str(i),"letter":c,"points":dict(zip(game.ALPHABETS[language],game.TILES[language]))[c][1]}
                       for i,c in enumerate(letters)]
 
 
@@ -22,6 +23,50 @@ def placements(letters,positions):
 
 
 class Rules(unittest.TestCase):
+    def test_spanish_definitions(self):
+        self.assertEqual(definitions.normalized("año"),"AÑO")
+        self.assertEqual(definitions.normalized("ano"),"ANO")
+        self.assertEqual(definitions.normalized("árbol"),"ARBOL")
+        parser = definitions.Senses(definition_list=True)
+        parser.feed('<dl><dt>1 Sustantivo</dt><dd>Edificación destinada a <a>vivienda</a>.'
+                    '<dl><dd>Ejemplo que no forma parte de la definición.</dd></dl></dd>'
+                    '<dd>Nota que tampoco forma parte.</dd></dl>')
+        self.assertEqual(parser.senses,["Edificación destinada a vivienda."])
+
+    def test_spanish_tiles_words_and_digraphs(self):
+        bag = game.tile_bag("es")
+        self.assertEqual(len(bag),100)
+        self.assertEqual(len({t["id"] for t in bag}),100)
+        self.assertEqual({t["letter"] for t in bag},set(game.ALPHABETS["es"]))
+        self.assertEqual(Counter(t["letter"] for t in bag)["Ñ"],1)
+        self.assertEqual(len(game.WORDS["es"]),639293)
+        for word in ("AÑO","CHICO","CALLE","PERRO","ABABILLARA","ABABILLARAIS","ABARQUILLAMIENTO"):
+            self.assertTrue(word in game.WORDS["es"],word)
+        self.assertGreater(len("ABARQUILLAMIENTO"),15)
+        self.assertLessEqual(len(game.word_tiles("ABARQUILLAMIENTO","es")),15)
+        room,p = fixture("es")
+        rack(p,["CH","I","C","O"],"es")
+        move = game.validate(room,p,placements(["CH","I","C","O"],[111,112,113,114]))
+        self.assertEqual(move["words"][0]["word"],"CHICO")
+        self.assertEqual(move["score"],20)
+        rack(p,list("CHICO"),"es")
+        with self.assertRaisesRegex(ValueError,"one tile"):
+            game.validate(room,p,placements("CHICO",[110,111,112,113,114]))
+        rack(p,["C","A","L","L","E"],"es")
+        with self.assertRaisesRegex(ValueError,"one tile"):
+            game.validate(room,p,placements("CALLE",[110,111,112,113,114]))
+        rack(p,["P","E","R","R","O"],"es")
+        with self.assertRaisesRegex(ValueError,"one tile"):
+            game.validate(room,p,placements("PERRO",[110,111,112,113,114]))
+        rack(p,["?","I","C","O"],"es")
+        move = game.validate(room,p,placements(["CH","I","C","O"],[111,112,113,114]))
+        self.assertEqual(move["score"],10)
+        for invalid in ("K","W","?"):
+            with self.assertRaisesRegex(ValueError,"blank"):
+                game.validate(room,p,placements([invalid,"I","C","O"],[111,112,113,114]))
+        rack(p,["A","Ñ","O"],"es")
+        self.assertEqual(game.validate(room,p,placements(["A","Ñ","O"],[111,112,113]))["score"],20)
+
     def test_board_and_bags(self):
         self.assertEqual(Counter(game.PREMIUMS.values()),{"TW":8,"DW":17,"TL":12,"DL":24})
         for pos,premium in game.PREMIUMS.items():

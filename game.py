@@ -19,7 +19,7 @@ for language, source in SOURCES.items():
     if len(WORDS[language]) != source["words"]:
         raise RuntimeError(f"Dictionary count failed: {language}")
 
-# Each pair is (count, points), in A–Z order, followed by the two blanks.
+# Each pair is (count, points), in ALPHABETS order.
 TILES = {
     "en": [(9,1),(2,3),(2,3),(4,2),(12,1),(2,4),(3,2),(2,4),(9,1),
            (1,8),(1,5),(4,1),(2,3),(6,1),(8,1),(2,3),(1,10),(6,1),
@@ -27,8 +27,20 @@ TILES = {
     "fr": [(9,1),(2,3),(2,3),(3,2),(15,1),(2,4),(2,2),(2,4),(8,1),
            (1,8),(1,10),(5,1),(3,2),(6,1),(6,1),(2,3),(1,8),(6,1),
            (6,1),(6,1),(6,1),(2,4),(1,10),(1,10),(1,10),(1,10),(2,0)],
+    "es": [(12,1),(2,3),(4,3),(1,5),(5,2),(12,1),(1,4),(2,2),(2,4),
+           (6,1),(1,8),(4,1),(1,8),(2,3),(5,1),(1,8),(9,1),(2,3),
+           (1,5),(5,1),(1,8),(6,1),(4,1),(5,1),(1,4),(1,8),(1,4),(1,10),(2,0)],
 }
 LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ?"
+ALPHABETS = {"en": list(LETTERS), "fr": list(LETTERS),
+             "es": ["A","B","C","CH","D","E","F","G","H","I","J","L","LL","M","N","Ñ",
+                    "O","P","Q","R","RR","S","T","U","V","X","Y","Z","?"]}
+
+
+def word_tiles(word, language):
+    return re.findall(r"CH|LL|RR|[A-ZÑ]",word) if language == "es" else list(word)
+
+
 PREMIUMS = {}
 for kind, cells in {
     "TW": [(0,0),(0,7),(0,14),(7,0),(7,14),(14,0),(14,7),(14,14)],
@@ -47,7 +59,7 @@ DEFAULT_SETTINGS = {"language": "fr", "minutes": 0, "turn_seconds": 0,
 
 def tile_bag(language):
     bag = []
-    for letter, (count, points) in zip(LETTERS, TILES[language]):
+    for letter, (count, points) in zip(ALPHABETS[language], TILES[language]):
         for n in range(count):
             bag.append({"id": f"{letter}{n}", "letter": letter, "points": points})
     random.SystemRandom().shuffle(bag)
@@ -59,7 +71,7 @@ def settings(value):
         raise ValueError("Invalid settings.")
     result = dict(DEFAULT_SETTINGS)
     if value.get("language") not in WORDS:
-        raise ValueError("Choose French or English.")
+        raise ValueError("Choose French, English or Spanish.")
     result["language"] = value["language"]
     for key, allowed in [("minutes", (0,5,10,15,20,30,45,60)),
                          ("turn_seconds", (0,30,60,90,120,180,300))]:
@@ -116,7 +128,7 @@ def validate(room, player, placements):
         tile = dict(rack[tile_id])
         if tile["letter"] == "?":
             letter = entry.get("letter")
-            if not isinstance(letter, str) or not re.fullmatch("[A-Z]", letter):
+            if not isinstance(letter, str) or letter not in ALPHABETS[room["settings"]["language"]] or letter == "?":
                 raise ValueError("Choose a letter for the blank.")
             tile.update(letter=letter, blank=True)
         tile["player"] = player["id"]
@@ -143,6 +155,8 @@ def validate(room, player, placements):
             if len(cells) < 2 or tuple(cells) in found:
                 continue
             word = "".join(board[c]["letter"] for c in cells)
+            if room["settings"]["language"] == "es" and word_tiles(word,"es") != [board[c]["letter"] for c in cells]:
+                raise ValueError("CH, LL and RR must each use one tile.")
             multiplier, points = 1, 0
             for c in cells:
                 premium = PREMIUMS.get(c) if c in placed else None
