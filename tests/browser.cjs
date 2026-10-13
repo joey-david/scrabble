@@ -241,10 +241,14 @@ async function eightPlayerLayout(browser) {
   }
 }
 
-async function revealRack(browser) {
+async function revealRack(browser, language = "en") {
   const contexts = await Promise.all([
     browser.newContext(),
-    browser.newContext(),
+    browser.newContext({
+      viewport: { width: 390, height: 844 },
+      isMobile: true,
+      hasTouch: true,
+    }),
   ]);
   let code;
   try {
@@ -267,7 +271,7 @@ async function revealRack(browser) {
           action: "settings",
           rev: state.rev,
           request_id: crypto.randomUUID(),
-          settings: { language: "en", random_first: false },
+          settings: { language, random_first: false },
         },
       })
     ).json();
@@ -278,12 +282,64 @@ async function revealRack(browser) {
         request_id: crypto.randomUUID(),
       },
     });
+    if (language === "es") {
+      assert.ok(
+        !process.env.SCRABBLE_TEST_URL,
+        "Spanish seeded checks require a local server",
+      );
+      seedRacks(code, [
+        ["CH", "I", "C", "O", "Ñ", "A", "?"],
+        ["C", "A", "LL", "E", "R", "RR", "O"],
+      ]);
+    }
     const [a, b] = await Promise.all(
       contexts.map((context) => context.newPage()),
     );
     for (const page of [a, b]) {
       await page.goto(base + "?room=" + code);
       await page.locator("#game").waitFor({ state: "visible" });
+      if (language === "es") await page.locator('[data-locale="es"]').click();
+    }
+    if (language === "es") {
+      assert.equal(await a.locator("#play").textContent(), "Jugar");
+      const state = await (
+        await contexts[0].request.get(base + "api/room/" + code)
+      ).json();
+      assert.equal(state.dictionary.words, 639293);
+      assert.equal(state.tiles.CH.points, 5);
+      assert.equal(state.tiles.LL.points, 8);
+      assert.equal(state.tiles.RR.points, 8);
+      assert.equal(state.tiles["Ñ"].points, 8);
+      await a.locator(".rack-tile").filter({ hasText: "·" }).click();
+      await a.locator('[data-pos="112"]').click();
+      for (const letter of ["Ñ", "CH", "LL", "RR"])
+        assert.equal(
+          await a.getByRole("button", { name: letter, exact: true }).count(),
+          1,
+        );
+      for (const letter of ["K", "W"])
+        assert.equal(
+          await a.getByRole("button", { name: letter, exact: true }).count(),
+          0,
+        );
+      await a.getByRole("button", { name: "Ñ", exact: true }).click();
+      assert.match(
+        await a.locator('[data-pos="112"]').getAttribute("aria-label"),
+        /Ñ comodín/,
+      );
+      await a.locator("#recall").click();
+      await a.locator('[data-pos="112"]').focus();
+      await a
+        .locator('[data-pos="112"]')
+        .dispatchEvent("keydown", { key: "ñ" });
+      assert.match(await a.locator('[data-pos="112"]').textContent(), /^Ñ/);
+      await a.locator("#recall").click();
+      for (const page of [a, b])
+        assert.ok(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth,
+          ),
+        );
     }
     await a.locator("#reveal").click();
     await b.locator(".shared-rack").waitFor();
@@ -293,7 +349,32 @@ async function revealRack(browser) {
     await a.locator("#reveal").click();
     await b.locator("#reveal").click();
     await a.locator(".shared-rack").waitFor();
-    await playOpening(a);
+    if (language === "es") {
+      await a.locator('[data-pos="111"]').focus();
+      await a.keyboard.press("Shift+C");
+      await a.keyboard.type("ico");
+      assert.equal(await a.locator("#board .tile").count(), 4);
+      assert.match(await a.locator('[data-pos="111"]').textContent(), /^CH/);
+      await a.locator("#play").click();
+      await a.waitForFunction(() =>
+        document.querySelector("#history").textContent.includes("CHICO"),
+      );
+      const state = await (
+        await contexts[0].request.get(base + "api/room/" + code)
+      ).json();
+      assert.equal(state.history[0].score, 20);
+      await b.waitForFunction(() => !document.querySelector("#pass").disabled);
+      await b.locator(".rack-tile.digraph").filter({ hasText: "LL" }).click();
+      await b.locator('[data-pos="127"]').click();
+      assert.match(await b.locator('[data-pos="127"]').textContent(), /^LL/);
+      await b.locator("#recall").click();
+      await b.locator('[data-pos="127"]').focus();
+      await b.keyboard.press("Shift+R");
+      assert.match(await b.locator('[data-pos="127"]').textContent(), /^RR/);
+      await b.locator("#recall").click();
+      await b.screenshot({ path: path.join(out, "spanish-mobile.png") });
+      await a.screenshot({ path: path.join(out, "spanish-desktop.png") });
+    } else await playOpening(a);
     await b.locator(".shared-rack").waitFor({ state: "hidden" });
     await a.locator(".shared-rack").waitFor({ state: "hidden" });
     assert.equal(
@@ -339,6 +420,13 @@ async function main() {
   for (const page of [a, b])
     page.on("pageerror", (e) => errors.push(e.message));
   try {
+    if (process.env.SCRABBLE_TEST_SPANISH_ONLY) {
+      await revealRack(browser, "es");
+      console.log(
+        "PASS: Spanish UI, dictionary, digraphs, Ñ, blank choices, scoring, mobile layout and reveal reset.",
+      );
+      return;
+    }
     if (process.env.SCRABBLE_TEST_REVEAL_ONLY) {
       await revealRack(browser);
       console.log(

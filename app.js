@@ -3,6 +3,11 @@
 const $ = (id) => document.getElementById(id);
 const messages = {
   en: {
+    publicRoom: "Public room",
+    inviteOnly: "Invite-only",
+    skipAbsent: "Pass absent player",
+    words: "words",
+    tiles: "tiles",
     joinLobby: "Join",
     name: "Your name",
     choosePhoto: "Profile picture",
@@ -97,11 +102,11 @@ const messages = {
       "Place tiles in one row or column with no gaps. Every new word, including cross-words, must be in the selected dictionary.",
       "Tap or drag letters to place, move, and replace them before clicking Play. Played tiles stay on the board. Tap a placed blank to move it; return it to your rack to choose another letter.",
       "Tap a rack letter and use ← / → below the rack to reorder it, or drag it onto another rack tile. Shuffle and A–Z also work.",
-      "Click a square and type. Arrow keys move the cursor; Enter changes direction; Backspace recalls a tile. A blank can represent any A–Z letter.",
+      "Click a square and type. Arrow keys move the cursor; Enter changes direction; Backspace recalls a tile. A blank can represent any tile in the selected language. In Spanish, Shift+C/L/R types CH/LL/RR.",
       "Letter and word bonuses count only when a tile first covers them. Using all seven tiles adds 50 points.",
       "Exchange uses your turn. Consecutive turns without a score end the game after at least six turns (two per player with four or more players).",
       "At the end, remaining rack points are deducted. A player who uses their last tiles with an empty bag receives the other rack points.",
-      "The standard French and English boards share the same bonus layout. French uses 102 tiles; English 100. Five to eight players is a house-rule extension.",
+      "All three languages share the same bonus layout. French uses 102 tiles; English and Spanish use 100. Spanish CH, LL and RR each occupy one square; Ñ is distinct from N. Five to eight players is a house-rule extension.",
       "Your session reconnects in this browser. Do not clear its cookies during a game. Invite-only rooms are open to anyone with the link.",
     ],
     letter2: "Double letter",
@@ -123,6 +128,11 @@ const messages = {
     moveRight: "Move to end",
   },
   fr: {
+    publicRoom: "Salon public",
+    inviteOnly: "Sur invitation",
+    skipAbsent: "Passer le joueur absent",
+    words: "mots",
+    tiles: "lettres",
     joinLobby: "Rejoindre",
     name: "Votre nom",
     choosePhoto: "Photo de profil",
@@ -217,11 +227,11 @@ const messages = {
       "Posez les lettres dans une seule ligne ou colonne, sans trou. Tous les mots créés, y compris les croisements, doivent figurer dans le dictionnaire choisi.",
       "Touchez ou glissez les lettres pour les poser, déplacer ou remplacer avant de cliquer sur Jouer. Les lettres jouées restent fixes. Pour changer la lettre d’un joker, reprenez-le puis reposez-le.",
       "Sélectionnez une lettre du chevalet, puis utilisez ← / → pour la ranger, ou glissez-la sur une autre lettre. Mélanger et A–Z fonctionnent aussi.",
-      "Cliquez sur une case et tapez. Les flèches déplacent le curseur ; Entrée change le sens ; Retour arrière reprend une lettre. Un joker peut représenter toute lettre A–Z.",
+      "Cliquez sur une case et tapez. Les flèches déplacent le curseur ; Entrée change le sens ; Retour arrière reprend une lettre. Un joker peut représenter toute lettre de la langue choisie. En espagnol, Maj+C/L/R écrit CH/LL/RR.",
       "Les cases bonus comptent seulement lorsqu’une lettre les couvre pour la première fois. Poser sept lettres donne 50 points en plus.",
       "Échanger utilise votre tour. Les tours sans score terminent le jeu après au moins six tours consécutifs (deux par joueur à partir de quatre joueurs).",
       "En fin de partie, les lettres restantes sont déduites. Un joueur qui vide son chevalet lorsque le sac est vide reçoit aussi les points des autres chevalets.",
-      "Les plateaux français et anglais ont les mêmes cases bonus. Le français compte 102 lettres ; l’anglais 100. De cinq à huit joueurs, on étend les règles habituelles.",
+      "Les trois langues ont les mêmes cases bonus. Le français compte 102 lettres ; l’anglais et l’espagnol 100. CH, LL et RR occupent chacun une case ; Ñ est distinct de N. De cinq à huit joueurs, on étend les règles habituelles.",
       "Votre partie reprend dans ce navigateur. Gardez ses cookies pendant la partie. Une salle sur invitation reste ouverte à toute personne ayant son lien.",
     ],
     letter2: "Lettre double",
@@ -242,6 +252,130 @@ const messages = {
     swap: "Permuter",
     moveLeft: "Placer au début",
     moveRight: "Placer à la fin",
+  },
+  es: {
+    publicRoom: "Sala pública",
+    inviteOnly: "Por invitación",
+    skipAbsent: "Pasar al jugador ausente",
+    words: "palabras",
+    tiles: "fichas",
+    joinLobby: "Entrar",
+    name: "Tu nombre",
+    choosePhoto: "Foto de perfil",
+    removePhoto: "Quitar",
+    privateRoom: "Sala privada",
+    invite: "Invitar",
+    leave: "Salir",
+    players: "Jugadores",
+    settings: "Ajustes",
+    dictionary: "Idioma y diccionario",
+    playerTime: "Tiempo por jugador",
+    turnTime: "Tiempo por turno",
+    unlimited: "Sin límite",
+    randomFirst: "Primer jugador al azar",
+    previewOption: "Vista previa de palabras",
+    saveSettings: "Guardar",
+    start: "Empezar",
+    yourRack: "Letras",
+    reveal: "Mostrar letras",
+    hideRack: "Ocultar letras",
+    zoom: "Zoom",
+    shuffle: "Mezclar",
+    sort: "A–Z",
+    recall: "Recoger todas",
+    returnTile: "Recoger",
+    play: "Jugar",
+    exchange: "Cambiar",
+    pass: "Pasar",
+    scores: "Puntos",
+    gameOver: "Fin de la partida",
+    rematch: "Volver a la sala",
+    resign: "Abandonar",
+    lastMoves: "Jugadas",
+    lobby: "Sala",
+    table: "Scrabble",
+    host: "Anfitrión",
+    you: "Tú",
+    emptySeat: "Libre",
+    waitingHost: "Esperando al anfitrión.",
+    hosting: "Eres el anfitrión.",
+    saved: "Ajustes guardados.",
+    copied: "Enlace copiado.",
+    copy: "Copiar enlace",
+    inviteHint:
+      "Quien tenga este enlace puede entrar antes de empezar. Hasta ocho jugadores.",
+    focus: "En esta página",
+    away: "Fuera de esta página",
+    offline: "Sin conexión",
+    yourTurn: "Tu turno",
+    turnOf: "Turno de {name}",
+    bag: "Quedan {count}",
+    placeHint: "",
+    waiting: "",
+    checking: "Comprobando palabras…",
+    valid: "{words} · {score} puntos",
+    bonus: " + 50 por las siete fichas",
+    connectionLost:
+      "Conexión interrumpida. Reconectando… Tus fichas sin jugar siguen aquí.",
+    reconnected: "Conexión restablecida.",
+    noDefinition: "No hay una definición breve.",
+    definitionLoading: "Buscando la definición…",
+    source: "Wikcionario · CC BY-SA",
+    score: "puntos",
+    passed: "Turno pasado",
+    exchanged: "{count} fichas cambiadas",
+    resigned: "Abandono",
+    expired: "Tiempo del jugador agotado",
+    timeout: "Tiempo del turno agotado · turno pasado",
+    noMoves: "La primera palabra aparecerá aquí.",
+    won: "{name} gana con {score} puntos.",
+    tie: "Empate a {score} puntos: {names}.",
+    watching: "Espectador",
+    joinWatch: "Entrar en otra sala",
+    blankTitle: "Elige la letra del comodín",
+    blankHint: "El comodín vale cero puntos y conserva esta letra tras jugar.",
+    exchangeTitle: "Cambiar letras",
+    exchangeHint:
+      "Elige las fichas que devuelves. Consume tu turno y requiere al menos siete fichas en la bolsa.",
+    confirm: "Confirmar",
+    cancel: "Cancelar",
+    passTitle: "¿Pasar tu turno?",
+    passHint: "Tus letras siguen en el atril.",
+    resignTitle: "¿Abandonar la partida?",
+    resignHint: "Se restarán los puntos de tus fichas. Puedes seguir mirando.",
+    leaveTitle: "¿Salir de esta sala?",
+    leaveHint:
+      "Durante la partida, salir abandona tu puesto. En la sala, el siguiente jugador pasa a ser anfitrión.",
+    helpTitle: "Cómo jugar",
+    helpItems: [
+      "La primera palabra debe cubrir la estrella central. Las siguientes deben conectar con el tablero.",
+      "Coloca las fichas en una fila o columna sin huecos. Todas las palabras creadas deben estar en el diccionario elegido.",
+      "Toca o arrastra las letras para colocarlas antes de pulsar Jugar. Las fichas jugadas quedan fijas. Devuelve un comodín al atril para cambiar su letra.",
+      "Arrastra una ficha sobre otra para intercambiarlas, o hasta un extremo del atril para moverla allí. También puedes usar las flechas, Mezclar o A–Z.",
+      "Haz clic en una casilla y escribe. Las flechas mueven el cursor; Intro cambia la dirección; Retroceso recoge una ficha. En español, Mayús+C/L/R escribe CH/LL/RR.",
+      "CH, LL y RR ocupan una casilla. Ñ es distinta de N. El comodín puede representar cualquiera de estas fichas; K y W no se usan.",
+      "Las casillas de premio cuentan al cubrirlas por primera vez. Jugar siete fichas suma 50 puntos.",
+      "Cambiar consume un turno. Seis turnos seguidos sin puntos terminan la partida; con cuatro o más jugadores, son dos por jugador.",
+      "Al final se restan los puntos del atril. Quien juega sus últimas fichas con la bolsa vacía recibe los puntos de los demás atriles.",
+      "Francés usa 102 fichas; inglés y español, 100. De cinco a ocho jugadores se amplían las reglas habituales. La partida se conserva en este navegador.",
+    ],
+    letter2: "Doble letra",
+    letter3: "Triple letra",
+    word2: "Doble palabra",
+    word3: "Triple palabra",
+    notYourTurn: "Espera tu turno.",
+    fixedTile: "Las fichas jugadas quedan fijas.",
+    changed: "El turno cambió. Tus fichas sin jugar volvieron al atril.",
+    hostSettings: "Solo el anfitrión puede cambiar estos ajustes.",
+    finishedReason: "Se han aplicado los puntos de los atriles.",
+    blank: "comodín",
+    remove: "Recoger ficha",
+    editProfile: "Perfil",
+    profileSaved: "Perfil guardado.",
+    photoError: "Elige una imagen de menos de 10 MB.",
+    swap: "Intercambiar",
+    moveLeft: "Mover al principio",
+    moveRight: "Mover al final",
   },
 };
 
@@ -544,13 +678,12 @@ function render(force = false) {
   $("game").hidden = room.status === "lobby";
   $("room-title").textContent = t(room.status === "lobby" ? "lobby" : "table");
   $("room-code").textContent =
-    `${room.public ? (locale === "fr" ? "Salon public" : "Public room") : locale === "fr" ? "Sur invitation" : "Invite-only"} · ${room.id}`;
+    `${t(room.public ? "publicRoom" : "inviteOnly")} · ${room.id}`;
   $("host-note").textContent = t(isHost() ? "hosting" : "waitingHost");
   $("leave").hidden = !room.me;
   $("join-other").hidden = Boolean(room.me);
   $("edit-profile").hidden = !room.me;
-  $("skip-absent").textContent =
-    locale === "fr" ? "Passer le joueur absent" : "Pass absent player";
+  $("skip-absent").textContent = t("skipAbsent");
   renderPlayers(force);
   if (room.status === "lobby") {
     $("settings-fields").disabled = !isHost();
@@ -564,7 +697,7 @@ function render(force = false) {
     $("random-first").checked = room.settings.random_first;
     $("show-preview").checked = room.settings.show_preview;
     $("dictionary-note").textContent =
-      `${room.dictionary.edition} · ${room.dictionary.words.toLocaleString(locale)} ${locale === "fr" ? "mots" : "words"} · ${room.settings.language === "fr" ? 102 : 100} ${locale === "fr" ? "lettres" : "tiles"}`;
+      `${room.dictionary.edition} · ${room.dictionary.words.toLocaleString(locale)} ${t("words")} · ${room.settings.language === "fr" ? 102 : 100} ${t("tiles")}`;
   } else {
     renderBoard();
     renderRack();
@@ -600,6 +733,7 @@ function tileElement(tile, className, button = true) {
     className,
     tile.letter === "?" ? "·" : tile.letter,
   );
+  el.classList.toggle("digraph", tile.letter.length > 1);
   el.append(node("small", "", String(tile.points)));
   return el;
 }
@@ -623,7 +757,9 @@ function renderBoard() {
     const premiumLabel =
       room.settings.language === "fr"
         ? { DL: "LD", TL: "LT", DW: "MD", TW: "MT" }[premium]
-        : premium;
+        : room.settings.language === "es"
+          ? { DL: "DL", TL: "TL", DW: "DP", TW: "TP" }[premium]
+          : premium;
     const el = tile
       ? tileElement(tile, "cell tile")
       : node("button", "cell", pos === 112 ? "✦" : premiumLabel || "");
@@ -745,7 +881,9 @@ function place(id, pos, letter) {
   const previous = drafts.find((d) => d.id === id);
   if (tile.letter === "?" && !letter && !previous) {
     const grid = node("div", "blank-letters");
-    for (const c of "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+    for (const c of Object.keys(room.tiles).filter(
+      (letter) => letter !== "?",
+    )) {
       const button = node("button", "", c);
       button.addEventListener("click", () => {
         $("modal").close();
@@ -845,11 +983,16 @@ function boardKey(event) {
     focusCursor();
     return;
   }
-  const letter = event.key
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toUpperCase();
-  if (!/^[A-Z]$/.test(letter)) return;
+  let letter =
+    event.key.toUpperCase() === "Ñ"
+      ? "Ñ"
+      : event.key
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toUpperCase();
+  if (room.settings.language === "es" && event.shiftKey)
+    letter = { C: "CH", L: "LL", R: "RR" }[letter] || letter;
+  if (!Object.hasOwn(room.tiles, letter) || letter === "?") return;
   event.preventDefault();
   while (room.board[cursor]) if (!moveCursor(direction)) return;
   const available = room.rack.filter(
@@ -923,6 +1066,10 @@ document.addEventListener(
     const target = dropTarget(event.clientX, event.clientY);
     const tile = room.rack.find((tile) => tile.id === drag.id);
     const assigned = drafts.find((d) => d.id === drag.id)?.letter;
+    $("drag-ghost").classList.toggle(
+      "digraph",
+      (assigned || tile.letter).length > 1,
+    );
     $("drag-ghost").replaceChildren(
       ...tileElement({ ...tile, letter: assigned || tile.letter }, "", false)
         .childNodes,

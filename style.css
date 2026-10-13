@@ -314,7 +314,10 @@ select {
   gap: 3px;
   margin-top: 5px;
 }
-.player.has-shared-rack { flex-wrap: wrap; row-gap: 0; }
+.player.has-shared-rack {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
 .shared-tile {
   position: relative;
   width: 17px;
@@ -1090,5 +1093,21 @@ dialog .avatar {
   * {
     transition: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+.cell.tile.digraph {
+  font-size: clamp(10px, 1.4vw, 20px);
+}
+.rack-tile.digraph,
+.drag-ghost.digraph {
+  font-size: 18px;
+}
+.shared-tile.digraph {
+  font-size: 9px;
+}
+@media (max-width: 700px) {
+  .cell.tile.digraph {
+    font-size: clamp(10px, 2.8vw, 17px);
   }
 }
