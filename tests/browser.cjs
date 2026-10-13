@@ -44,7 +44,48 @@ async function dragTo(page, from, to) {
     target.y + target.height / 2,
     { steps: 10 },
   );
+  assert.equal(
+    await page.locator("#drag-ghost").isVisible(),
+    true,
+    "drag should show the moving tile",
+  );
+  if (await to.evaluate((el) => el.classList.contains("rack-tile")))
+    assert.equal(
+      await to.evaluate((el) => el.classList.contains("swap-target")),
+      true,
+      "drag should preview the swap",
+    );
   await page.mouse.up();
+}
+
+async function touchSwap(context, page) {
+  const tiles = page.locator(".rack-tile"),
+    id = await tiles.first().getAttribute("data-id");
+  const from = await tiles.first().boundingBox(),
+    to = await tiles.nth(1).boundingBox();
+  const cdp = await context.newCDPSession(page);
+  const point = (box) => ({
+    x: box.x + box.width / 2,
+    y: box.y + box.height / 2,
+  });
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [point(from)],
+  });
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchMove",
+    touchPoints: [point(to)],
+  });
+  assert.equal(
+    await tiles.nth(1).evaluate((el) => el.classList.contains("swap-target")),
+    true,
+  );
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
+  assert.equal(await tiles.nth(1).getAttribute("data-id"), id);
+  await cdp.detach();
 }
 
 async function dragRackEdge(page, index, edge) {
@@ -284,6 +325,7 @@ async function main() {
       await b.waitForFunction(
         () => document.querySelector("#turn-label").textContent === "Your turn",
       );
+      await touchSwap(contexts[1], b);
       await b.locator('.rack-tile[data-id^="S"]').tap();
       await b.locator('[data-pos="114"]').tap();
       await b.waitForFunction(() =>
@@ -350,9 +392,15 @@ async function main() {
       false,
       "desktop game must fit one screen",
     );
-    await a.setViewportSize({width:1024,height:600});
-    assert.equal(await a.evaluate(() => document.documentElement.scrollHeight>innerHeight),false,'small desktop must fit one screen');
-    await a.setViewportSize({width:1280,height:900});
+    await a.setViewportSize({ width: 1024, height: 600 });
+    assert.equal(
+      await a.evaluate(
+        () => document.documentElement.scrollHeight > innerHeight,
+      ),
+      false,
+      "small desktop must fit one screen",
+    );
+    await a.setViewportSize({ width: 1280, height: 900 });
     await b.screenshot({
       path: path.join(out, "game-mobile.png"),
       fullPage: true,
@@ -362,11 +410,17 @@ async function main() {
       false,
       "mobile page overflows",
     );
-    for (const width of [320,360,430]) {
-      await b.setViewportSize({width,height:740});
-      assert.equal(await b.evaluate(() => document.documentElement.scrollWidth>innerWidth),false,`mobile width ${width} overflows`);
+    for (const width of [320, 360, 430]) {
+      await b.setViewportSize({ width, height: 740 });
+      assert.equal(
+        await b.evaluate(
+          () => document.documentElement.scrollWidth > innerWidth,
+        ),
+        false,
+        `mobile width ${width} overflows`,
+      );
     }
-    await b.setViewportSize({width:390,height:844});
+    await b.setViewportSize({ width: 390, height: 844 });
     await b.locator("#zoom").tap();
     await b.screenshot({
       path: path.join(out, "game-mobile-zoom.png"),
