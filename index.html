@@ -3,23 +3,22 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#254d42" />
+    <meta name="theme-color" content="#101113" />
     <meta
       name="description"
-      content="A quiet place to play French and English Scrabble with friends. Up to eight players, live rooms, and checked words."
+      content="Scrabble en français et en anglais, jusqu’à huit joueurs."
     />
-    <title>Scrabble · Joey David</title>
+    <title>Scrabble</title>
     <link rel="stylesheet" href="/scrabble/style.css" />
     <script src="/scrabble/app.js" defer></script>
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="/scrabble/" aria-label="Scrabble home"
-        ><span class="brand-tile">S<small>1</small></span
-        ><span>scrabble<span class="byline">chez Joey</span></span></a
+      <a class="brand" href="/scrabble/"
+        >scrabble<span class="brand-dot">.</span></a
       >
       <nav aria-label="Tools">
-        <button id="help" class="quiet">?</button>
+        <button id="help" class="quiet" aria-label="Help">?</button>
         <div class="language-switch">
           <button data-locale="fr" aria-label="Interface en français">FR</button
           ><button data-locale="en" aria-label="Interface in English">
@@ -30,76 +29,66 @@
     </header>
     <main>
       <section id="welcome" class="welcome">
-        <div class="intro">
-          <p class="eyebrow" data-i18n="eyebrow"></p>
-          <h1 data-i18n="headline"></h1>
-          <p data-i18n="intro"></p>
-          <div class="sample-tiles" aria-hidden="true">
-            <span>J<small>8</small></span
-            ><span>O<small>1</small></span
-            ><span>U<small>1</small></span
-            ><span>E<small>1</small></span
-            ><span>R<small>1</small></span>
-          </div>
-          <p class="fine" data-i18n="roomHint"></p>
-        </div>
-        <form id="join-form" class="card join-card">
-          <p class="eyebrow" data-i18n="takeSeat"></p>
-          <h2 id="join-title" data-i18n="joinLobby"></h2>
-          <label for="name" data-i18n="name"></label
-          ><input
-            id="name"
-            name="name"
-            maxlength="24"
-            required
-            autocomplete="nickname"
-            placeholder="Joey"
-          />
-          <div class="photo-row">
-            <span id="photo-preview" class="avatar large">J</span>
+        <form id="join-form" class="join-form">
+          <h1 data-i18n="joinLobby"></h1>
+          <div class="identity">
+            <label for="photo" class="photo-button" aria-label="Profile picture"
+              ><span id="photo-preview" class="avatar large">+</span
+              ><span class="photo-edit">+</span></label
+            ><input
+              id="photo"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              class="visually-hidden"
+            />
             <div>
-              <label
-                class="file-label"
-                for="photo"
-                data-i18n="choosePhoto"
-              ></label
+              <label for="name" data-i18n="name"></label
               ><input
-                id="photo"
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-              /><button
-                id="remove-photo"
-                type="button"
-                class="quiet"
-                data-i18n="removePhoto"
-                hidden
-              ></button>
-              <p class="fine" data-i18n="photoHint"></p>
+                id="name"
+                name="name"
+                maxlength="24"
+                required
+                autocomplete="nickname"
+                placeholder="…"
+              />
             </div>
           </div>
+          <button
+            id="remove-photo"
+            type="button"
+            class="quiet"
+            data-i18n="removePhoto"
+            hidden
+          ></button>
           <button
             type="submit"
             class="primary"
             id="join-button"
             data-i18n="joinLobby"
-          ></button
-          ><button
+            disabled
+          ></button>
+          <button
             type="button"
             class="quiet"
             id="create-room"
             data-i18n="privateRoom"
+            disabled
           ></button>
-          <p class="fine" data-i18n="noAccount"></p>
         </form>
       </section>
       <section id="room" hidden>
         <div class="room-heading">
-          <div>
-            <p class="eyebrow" id="room-code"></p>
+          <div class="room-title-group">
             <h1 id="room-title"></h1>
+            <span id="room-code" class="fine"></span>
           </div>
           <div class="room-tools">
             <button id="invite" class="secondary" data-i18n="invite"></button
+            ><button
+              id="edit-profile"
+              class="quiet"
+              data-i18n="editProfile"
+            ></button
             ><button id="leave" class="quiet" data-i18n="leave"></button
             ><button
               id="join-other"
@@ -107,27 +96,22 @@
               data-i18n="joinWatch"
               hidden
             ></button
-            ><button
-              id="edit-profile"
-              class="quiet"
-              data-i18n="editProfile"
-            ></button
             ><button id="skip-absent" class="quiet" hidden></button>
           </div>
         </div>
         <section id="lobby" class="lobby-layout">
-          <div class="card seats-card">
-            <div class="card-heading">
+          <div class="seats-section">
+            <div class="section-heading">
               <h2 data-i18n="players"></h2>
-              <span id="player-count" class="badge"></span>
+              <span id="player-count" class="fine"></span>
             </div>
             <div id="lobby-players" class="seats"></div>
             <p id="host-note" class="fine"></p>
           </div>
-          <form id="settings-form" class="card settings-card">
-            <div class="card-heading">
+          <form id="settings-form" class="settings-section">
+            <div class="section-heading">
               <h2 data-i18n="settings"></h2>
-              <span id="host-badge" class="badge"></span>
+              <span id="host-badge" class="fine"></span>
             </div>
             <fieldset id="settings-fields">
               <label for="game-language" data-i18n="dictionary"></label
@@ -172,7 +156,6 @@
                 ></span
               ></label>
             </fieldset>
-            <p class="fine" data-i18n="clockHint"></p>
             <div class="settings-actions">
               <button
                 id="save-settings"
@@ -204,7 +187,14 @@
                   aria-label="Placement direction"
                 >
                   →</button
-                ><button id="zoom" class="quiet" data-i18n="zoom"></button>
+                ><button id="zoom" class="quiet" data-i18n="zoom"></button
+                ><button
+                  id="board-home"
+                  class="quiet"
+                  aria-label="Center board"
+                >
+                  ⌾
+                </button>
               </div>
             </div>
             <div id="board-scroll" class="board-scroll">
@@ -221,10 +211,12 @@
               ><span class="legend-dw" id="legend-dw"></span
               ><span class="legend-tw" id="legend-tw"></span>
             </div>
+          </div>
+          <aside class="game-sidebar">
             <div class="rack-panel">
-              <div class="rack-heading">
-                <strong data-i18n="yourRack"></strong
-                ><span id="bag-count" class="fine"></span>
+              <div class="section-heading">
+                <h2 data-i18n="yourRack"></h2>
+                <span id="bag-count" class="fine"></span>
               </div>
               <div
                 id="rack"
@@ -264,14 +256,11 @@
                 ></button
                 ><button id="pass" class="quiet" data-i18n="pass"></button>
               </div>
-              <p class="fine controls-hint" data-i18n="controlsHint"></p>
             </div>
-          </div>
-          <aside class="game-sidebar">
-            <section class="card">
-              <div class="card-heading">
+            <section class="scores-section">
+              <div class="section-heading">
                 <h2 data-i18n="scores"></h2>
-                <span id="game-language-badge" class="badge"></span>
+                <span id="game-language-badge" class="fine"></span>
               </div>
               <div id="score-players"></div>
               <div id="finished" hidden>
@@ -286,11 +275,8 @@
               </div>
               <button id="resign" class="quiet" data-i18n="resign"></button>
             </section>
-            <section class="card history-card">
-              <div class="card-heading">
-                <h2 data-i18n="lastMoves"></h2>
-                <span class="fine" data-i18n="definitions"></span>
-              </div>
+            <section class="history-section">
+              <div class="section-heading"><h2 data-i18n="lastMoves"></h2></div>
               <div id="history" class="history"></div>
             </section>
           </aside>
@@ -298,11 +284,9 @@
       </section>
       <p id="connection" class="connection" role="status" hidden></p>
       <p id="notice" class="notice" role="status" hidden></p>
+      <div id="drag-ghost" class="drag-ghost" aria-hidden="true" hidden></div>
+      <span id="drag-hint" class="drag-hint" role="status" hidden></span>
     </main>
-    <footer>
-      <span data-i18n="footer"></span
-      ><a href="https://github.com/joey-david/scrabble">GitHub ↗</a>
-    </footer>
     <dialog id="modal">
       <button id="modal-close" class="dialog-close" aria-label="Close">
         ×

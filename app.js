@@ -3,60 +3,44 @@
 const $ = (id) => document.getElementById(id);
 const messages = {
   en: {
-    eyebrow: "French & English · 2–8 players",
-    headline: "A word with friends.",
-    intro:
-      "A shared board, a handful of letters, and all the time you need. Pull up a chair.",
-    roomHint:
-      "The first player hosts the room. No clock unless you choose one.",
-    takeSeat: "Take a seat",
-    joinLobby: "Join the lobby",
+    joinLobby: "Join",
     name: "Your name",
     choosePhoto: "Profile picture",
-    photoHint: "Optional. We crop it to a small square.",
     removePhoto: "Remove",
-    privateRoom: "Create an invite-only room",
-    noAccount: "No account. Just your name and an invite.",
-    invite: "Invite friends",
+    privateRoom: "Private room",
+    invite: "Invite",
     leave: "Leave room",
-    players: "Around the table",
-    settings: "Room settings",
+    players: "Players",
+    settings: "Settings",
     dictionary: "Language & dictionary",
     playerTime: "Time per player",
     turnTime: "Time per turn",
     unlimited: "Unlimited",
-    randomFirst: "Choose the first player at random",
-    previewOption: "Show word checks and score previews",
-    clockHint:
-      "The player clock runs only on your turn. A turn timeout passes; an empty player clock ends your game.",
-    saveSettings: "Save settings",
-    start: "Start game",
-    yourRack: "Your letters",
-    zoom: "Zoom board",
+    randomFirst: "Random first player",
+    previewOption: "Word previews",
+    saveSettings: "Save",
+    start: "Start",
+    yourRack: "Letters",
+    zoom: "Zoom",
     shuffle: "Shuffle",
     sort: "A–Z",
     recall: "Recall all",
-    returnTile: "Return selected",
-    play: "Play word",
+    returnTile: "Return",
+    play: "Play",
     exchange: "Exchange",
     pass: "Pass",
-    controlsHint:
-      "Tap a letter, then a square. Move or replace your tiles before playing. Arrow keys navigate; type letters to place them.",
     scores: "Scores",
     gameOver: "Game over",
     rematch: "Back to lobby",
     resign: "Resign",
     lastMoves: "Moves",
-    definitions: "Words & definitions",
-    footer: "Made for a good game. French ODS9 · English CSW24.",
-    lobby: "The waiting room",
-    table: "At the table",
+    lobby: "Lobby",
+    table: "Scrabble",
     host: "Host",
     you: "You",
-    emptySeat: "Open seat",
-    waitingHost: "The host chooses the settings and starts the game.",
-    hosting:
-      "You host this room. Invite your friends, choose the settings, then start.",
+    emptySeat: "Empty",
+    waitingHost: "Waiting for the host.",
+    hosting: "You host this room.",
     saved: "Settings saved.",
     copied: "Invite link copied.",
     copy: "Copy link",
@@ -69,9 +53,9 @@ const messages = {
       "Focused means this page is visible and its window has focus. Away means another tab, window, or app has focus. Disconnected means no heartbeat for 35 seconds.",
     yourTurn: "Your turn",
     turnOf: "{name}’s turn",
-    bag: "{count} tiles in the bag",
-    placeHint: "Place your letters to form a word.",
-    waiting: "You can arrange your rack while you wait.",
+    bag: "{count} left",
+    placeHint: "",
+    waiting: "",
     checking: "Checking words…",
     valid: "{words} · {score} points",
     bonus: " + 50 for all seven",
@@ -90,7 +74,7 @@ const messages = {
     noMoves: "The first word will appear here.",
     won: "{name} wins with {score} points.",
     tie: "A tie at {score} points: {names}.",
-    watching: "You are watching this game.",
+    watching: "Spectating",
     joinWatch: "Join another lobby",
     blankTitle: "Choose the blank’s letter",
     blankHint:
@@ -131,65 +115,52 @@ const messages = {
     finishedReason: "Final rack points have been applied.",
     blank: "blank",
     remove: "Remove tile",
-    editProfile: "Edit profile",
+    editProfile: "Profile",
     profileSaved: "Profile saved.",
     photoError: "Choose a readable image smaller than 10 MB.",
+    swap: "Swap",
+    moveLeft: "Move to start",
+    moveRight: "Move to end",
   },
   fr: {
-    eyebrow: "Français & anglais · 2–8 joueurs",
-    headline: "Un mot entre amis.",
-    intro:
-      "Un plateau partagé, quelques lettres et tout le temps qu’il vous faut. Prenez place.",
-    roomHint:
-      "Le premier joueur accueille la salle. Pas de chrono, sauf si vous le souhaitez.",
-    takeSeat: "Prenez place",
-    joinLobby: "Rejoindre le salon",
+    joinLobby: "Rejoindre",
     name: "Votre nom",
     choosePhoto: "Photo de profil",
-    photoHint: "Facultative. Elle sera recadrée en carré.",
     removePhoto: "Retirer",
-    privateRoom: "Créer une salle sur invitation",
-    noAccount: "Sans compte. Un nom et une invitation suffisent.",
-    invite: "Inviter des amis",
+    privateRoom: "Salle privée",
+    invite: "Inviter",
     leave: "Quitter",
-    players: "Autour de la table",
-    settings: "Réglages de la salle",
+    players: "Joueurs",
+    settings: "Réglages",
     dictionary: "Langue et dictionnaire",
     playerTime: "Temps par joueur",
     turnTime: "Temps par tour",
     unlimited: "Illimité",
-    randomFirst: "Tirer au sort le premier joueur",
-    previewOption: "Afficher la validité et les points avant de jouer",
-    clockHint:
-      "Votre chrono tourne pendant votre tour. Un tour expiré passe ; un chrono joueur épuisé termine votre partie.",
+    randomFirst: "Premier joueur au hasard",
+    previewOption: "Aperçu des mots",
     saveSettings: "Enregistrer",
-    start: "Lancer la partie",
-    yourRack: "Vos lettres",
-    zoom: "Agrandir",
+    start: "Lancer",
+    yourRack: "Lettres",
+    zoom: "Zoom",
     shuffle: "Mélanger",
     sort: "A–Z",
     recall: "Tout reprendre",
-    returnTile: "Reprendre la lettre",
-    play: "Jouer le mot",
+    returnTile: "Reprendre",
+    play: "Jouer",
     exchange: "Échanger",
     pass: "Passer",
-    controlsHint:
-      "Touchez une lettre, puis une case. Déplacez ou remplacez vos lettres avant de jouer. Au clavier : flèches pour naviguer, lettres pour poser.",
     scores: "Scores",
     gameOver: "Partie terminée",
     rematch: "Retour au salon",
     resign: "Abandonner",
-    lastMoves: "Les coups",
-    definitions: "Mots et définitions",
-    footer: "Pour le plaisir du jeu. Français ODS9 · Anglais CSW24.",
-    lobby: "Le salon d’attente",
-    table: "À vous de jouer",
+    lastMoves: "Coups",
+    lobby: "Salon",
+    table: "Scrabble",
     host: "Hôte",
     you: "Vous",
-    emptySeat: "Place libre",
-    waitingHost: "L’hôte choisit les réglages et lance la partie.",
-    hosting:
-      "Vous accueillez cette salle. Invitez vos amis, réglez le jeu puis lancez la partie.",
+    emptySeat: "Libre",
+    waitingHost: "En attente de l’hôte.",
+    hosting: "Vous êtes l’hôte.",
     saved: "Réglages enregistrés.",
     copied: "Lien d’invitation copié.",
     copy: "Copier le lien",
@@ -202,9 +173,9 @@ const messages = {
       "Sur cette page : onglet visible et fenêtre active. Ailleurs : un autre onglet, une autre fenêtre ou une autre application est active. Déconnecté : aucun signe de connexion depuis 35 secondes.",
     yourTurn: "À vous de jouer",
     turnOf: "Tour de {name}",
-    bag: "{count} lettres dans le sac",
-    placeHint: "Posez vos lettres pour former un mot.",
-    waiting: "Vous pouvez ranger vos lettres en attendant.",
+    bag: "{count} restantes",
+    placeHint: "",
+    waiting: "",
     checking: "Vérification des mots…",
     valid: "{words} · {score} points",
     bonus: " + 50 pour les sept lettres",
@@ -223,7 +194,7 @@ const messages = {
     noMoves: "Le premier mot apparaîtra ici.",
     won: "{name} gagne avec {score} points.",
     tie: "Égalité à {score} points : {names}.",
-    watching: "Vous regardez cette partie.",
+    watching: "Spectateur",
     joinWatch: "Rejoindre un autre salon",
     blankTitle: "Choisissez la lettre du joker",
     blankHint: "Le joker vaut zéro point et garde cette lettre après le coup.",
@@ -265,9 +236,12 @@ const messages = {
     finishedReason: "Les points des lettres restantes ont été appliqués.",
     blank: "joker",
     remove: "Reprendre la lettre",
-    editProfile: "Modifier le profil",
+    editProfile: "Profil",
     profileSaved: "Profil enregistré.",
     photoError: "Choisissez une image lisible de moins de 10 Mo.",
+    swap: "Permuter",
+    moveLeft: "Placer au début",
+    moveRight: "Placer à la fin",
   },
 };
 
@@ -280,6 +254,7 @@ let room = null,
   drafts = [],
   order = [];
 let avatar = "",
+  sessionReady = false,
   busy = false,
   polling = false,
   lastPlayers = "",
@@ -677,6 +652,12 @@ function renderBoard() {
 }
 
 function renderRack() {
+  const previous = new Map(
+    [...$("rack").children].map((el) => [
+      el.dataset.id,
+      el.getBoundingClientRect(),
+    ]),
+  );
   const focused = document.activeElement?.closest(".rack-tile")?.dataset.id;
   const rack = new Map((room.rack || []).map((tile) => [tile.id, tile]));
   order = order.filter((id) => rack.has(id));
@@ -717,6 +698,21 @@ function renderRack() {
     [...$("rack").children]
       .find((el) => el.dataset.id === focused)
       ?.focus({ preventScroll: true });
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches)
+    for (const el of $("rack").children) {
+      const before = previous.get(el.dataset.id),
+        after = el.getBoundingClientRect();
+      if (before && Math.abs(before.x - after.x) > 1)
+        el.animate(
+          [
+            {
+              transform: `translate(${before.x - after.x}px, ${before.y - after.y}px)`,
+            },
+            { transform: getComputedStyle(el).transform },
+          ],
+          { duration: 240, easing: "cubic-bezier(.2,.8,.2,1)" },
+        );
+    }
 }
 
 function changedDrafts() {
@@ -872,6 +868,38 @@ function beginDrag(event, id) {
   };
 }
 
+function dropTarget(x, y) {
+  const target = document
+    .elementFromPoint(x, y)
+    ?.closest("[data-pos],.rack-tile");
+  if (target?.dataset.pos !== undefined)
+    return { element: target, pos: Number(target.dataset.pos) };
+  const rack = $("rack").getBoundingClientRect(),
+    tiles = [...$("rack").children];
+  if (
+    !tiles.length ||
+    y < rack.top - 24 ||
+    y > rack.bottom + 24 ||
+    x < rack.left - 30 ||
+    x > rack.right + 30
+  )
+    return null;
+  if (x < tiles[0].getBoundingClientRect().left - 3) return { edge: "left" };
+  if (x > tiles.at(-1).getBoundingClientRect().right + 3)
+    return { edge: "right" };
+  return { element: target, id: target?.dataset.id };
+}
+
+function clearDrag() {
+  document
+    .querySelectorAll(".drag-target,.swap-target,.dragging")
+    .forEach((el) =>
+      el.classList.remove("drag-target", "swap-target", "dragging"),
+    );
+  delete $("rack").dataset.edge;
+  $("drag-ghost").hidden = $("drag-hint").hidden = true;
+}
+
 document.addEventListener(
   "pointermove",
   (event) => {
@@ -882,14 +910,32 @@ document.addEventListener(
     )
       return;
     drag.active = true;
+    clearDrag();
     drag.source.classList.add("dragging");
-    const target = document
-      .elementFromPoint(event.clientX, event.clientY)
-      ?.closest("[data-pos],.rack-tile");
-    document
-      .querySelectorAll(".drag-target")
-      .forEach((el) => el.classList.remove("drag-target"));
-    target?.classList.add("drag-target");
+    const target = dropTarget(event.clientX, event.clientY);
+    const tile = room.rack.find((tile) => tile.id === drag.id);
+    const assigned = drafts.find((d) => d.id === drag.id)?.letter;
+    $("drag-ghost").replaceChildren(
+      ...tileElement({ ...tile, letter: assigned || tile.letter }, "", false)
+        .childNodes,
+    );
+    $("drag-ghost").hidden = false;
+    $("drag-ghost").style.transform =
+      `translate(${event.clientX - 20}px,${event.clientY - 23}px)`;
+    if (target?.edge) $("rack").dataset.edge = target.edge;
+    else
+      target?.element?.classList.add(
+        target.id && target.id !== drag.id ? "swap-target" : "drag-target",
+      );
+    const hint = target?.edge
+      ? t(target.edge === "left" ? "moveLeft" : "moveRight")
+      : target?.id && target.id !== drag.id
+        ? t("swap")
+        : "";
+    $("drag-hint").textContent = hint;
+    $("drag-hint").hidden = !hint;
+    $("drag-hint").style.transform =
+      `translate(${Math.min(event.clientX + 12, innerWidth - 125)}px,${Math.max(0, event.clientY - 38)}px)`;
   },
   { passive: true },
 );
@@ -898,35 +944,30 @@ document.addEventListener("pointerup", (event) => {
   if (!drag) return;
   const moving = drag;
   drag = null;
-  moving.source.classList.remove("dragging");
-  document
-    .querySelectorAll(".drag-target")
-    .forEach((el) => el.classList.remove("drag-target"));
+  clearDrag();
   if (!moving.active) return;
   suppressClick = true;
   setTimeout(() => (suppressClick = false), 0);
-  const target = document
-    .elementFromPoint(event.clientX, event.clientY)
-    ?.closest("[data-pos],.rack-tile,#rack");
-  if (target?.dataset.pos !== undefined)
-    place(moving.id, Number(target.dataset.pos));
+  const target = dropTarget(event.clientX, event.clientY);
+  if (target?.pos !== undefined) place(moving.id, target.pos);
   else if (target) {
     drafts = drafts.filter((d) => d.id !== moving.id);
-    if (target.dataset.id && target.dataset.id !== moving.id) {
-      const next = order.filter((id) => id !== moving.id);
-      next.splice(next.indexOf(target.dataset.id), 0, moving.id);
-      order = next;
+    if (target.edge) {
+      order = order.filter((id) => id !== moving.id);
+      if (target.edge === "left") order.unshift(moving.id);
+      else order.push(moving.id);
+    } else if (target.id && target.id !== moving.id) {
+      const from = order.indexOf(moving.id),
+        to = order.indexOf(target.id);
+      [order[from], order[to]] = [order[to], order[from]];
     }
     selected = moving.id;
     changedDrafts();
   }
 });
 document.addEventListener("pointercancel", () => {
-  drag?.source.classList.remove("dragging");
+  clearDrag();
   drag = null;
-  document
-    .querySelectorAll(".drag-target")
-    .forEach((el) => el.classList.remove("drag-target"));
 });
 
 function reorder(offset) {
@@ -1224,7 +1265,7 @@ async function poll() {
 }
 
 async function join(create = false) {
-  if (!$("join-form").reportValidity() || busy) return;
+  if (!sessionReady || !$("join-form").reportValidity() || busy) return;
   busy = true;
   $("join-button").disabled = true;
   $("create-room").disabled = true;
@@ -1411,6 +1452,17 @@ $("zoom").addEventListener("click", () => {
     .querySelector(`[data-pos="${cursor}"]`)
     ?.scrollIntoView({ block: "nearest", inline: "center" });
 });
+$("board-home").addEventListener("click", () =>
+  $("board")
+    .querySelector('[data-pos="112"]')
+    ?.scrollIntoView({
+      block: "nearest",
+      inline: "center",
+      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
+    }),
+);
 $("exchange").addEventListener("click", () => {
   const choices = node("div", "exchange-tiles");
   for (const tile of room.rack) {
@@ -1469,8 +1521,9 @@ async function boot() {
   translate();
   try {
     const session = await api("api/session");
-    $("name").value = session.profile.name;
-    avatar = session.profile.avatar;
+    sessionReady = true;
+    if (!$("name").value.trim()) $("name").value = session.profile.name;
+    if (!$("photo").files.length) avatar = session.profile.avatar;
     showPhoto();
     const code =
       new URL(location.href).searchParams.get("room") ||
@@ -1488,6 +1541,8 @@ async function boot() {
     }
   } catch (error) {
     notice(error.message, true);
+  } finally {
+    $("join-button").disabled = $("create-room").disabled = !sessionReady;
   }
 }
 boot();

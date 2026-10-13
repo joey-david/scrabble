@@ -47,6 +47,22 @@ async function dragTo(page, from, to) {
   await page.mouse.up();
 }
 
+async function dragRackEdge(page, index, edge) {
+  const source = await page.locator(".rack-tile").nth(index).boundingBox(),
+    rack = await page.locator("#rack").boundingBox();
+  await page.mouse.move(
+    source.x + source.width / 2,
+    source.y + source.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    edge === "left" ? rack.x + 1 : rack.x + rack.width - 1,
+    rack.y + rack.height / 2,
+    { steps: 10 },
+  );
+  await page.mouse.up();
+}
+
 async function playOpening(page) {
   const room = await page.evaluate(async () =>
     (
@@ -114,7 +130,7 @@ async function main() {
       fullPage: true,
     });
     await a.getByLabel("Your name").fill("Alice");
-    await a.getByRole("button", { name: "Create an invite-only room" }).click();
+    await a.getByRole("button", { name: "Private room", exact: true }).click();
     await a.locator("#lobby").waitFor({ state: "visible" });
     const url = a.url();
     await b.goto(url);
@@ -178,6 +194,25 @@ async function main() {
         await a.locator(".rack-tile").nth(1).getAttribute("data-id"),
         ids[0],
       );
+      await dragTo(
+        a,
+        a.locator(".rack-tile").nth(1),
+        a.locator(".rack-tile").nth(2),
+      );
+      assert.equal(
+        await a.locator(".rack-tile").nth(2).getAttribute("data-id"),
+        ids[0],
+      );
+      await dragRackEdge(a, 2, "right");
+      assert.equal(
+        await a.locator(".rack-tile").last().getAttribute("data-id"),
+        ids[0],
+      );
+      await dragRackEdge(a, 6, "left");
+      assert.equal(
+        await a.locator(".rack-tile").first().getAttribute("data-id"),
+        ids[0],
+      );
       // Invalid word: CTR is denied and stays editable.
       await a.locator('[data-pos="111"]').click();
       await a.locator('[data-pos="111"]').press("c");
@@ -191,6 +226,26 @@ async function main() {
         document.querySelector("#notice").textContent.includes("Not in"),
       );
       assert.equal(await a.locator(".cell.draft").count(), 3);
+      await a.locator("#recall").click();
+      // Swap two draft tiles, then replace one with a tile from the rack.
+      await a.locator('[data-pos="111"]').click();
+      await a.keyboard.type("ca");
+      await a.locator('[data-pos="111"]').click();
+      await a.locator('[data-pos="112"]').click();
+      assert.equal(
+        await a
+          .locator('[data-pos="112"]')
+          .evaluate((el) => el.firstChild.textContent),
+        "C",
+      );
+      await a.locator('.rack-tile[data-id^="T"]').click();
+      await a.locator('[data-pos="112"]').click();
+      assert.equal(
+        await a
+          .locator('.rack-tile[data-id^="C"]')
+          .evaluate((el) => el.classList.contains("used")),
+        false,
+      );
       await a.locator("#recall").click();
       // Touch/click placement, move, replace, and return a blank.
       await a.locator('.rack-tile[data-id^="?"]').click();
@@ -288,6 +343,13 @@ async function main() {
       path: path.join(out, "game-desktop.png"),
       fullPage: true,
     });
+    assert.equal(
+      await a.evaluate(
+        () => document.documentElement.scrollHeight > innerHeight,
+      ),
+      false,
+      "desktop game must fit one screen",
+    );
     await b.screenshot({
       path: path.join(out, "game-mobile.png"),
       fullPage: true,
