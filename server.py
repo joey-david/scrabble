@@ -105,6 +105,13 @@ class Store:
                 room["players"] = players
                 room["host"] = players[0]["id"] if players else None
                 changed = True
+        host = next((p for p in room["players"] if p["id"] == room["host"]),None)
+        if host and (host.get("resigned") or time.time()-host["seen"] >= 180):
+            replacement = next((p for p in room["players"] if not p.get("resigned")
+                                and not p.get("left") and time.time()-p["seen"] < 35),None)
+            if replacement and replacement["id"] != room["host"]:
+                room["host"] = replacement["id"]
+                changed = True
         if changed:
             room["rev"] += 1
         return room
@@ -233,6 +240,13 @@ class Store:
                     player["left"] = True
                 if room["host"] == player["id"]:
                     room["host"] = next((p["id"] for p in room["players"] if not p.get("left")),None)
+            elif action == "skip_absent":
+                absent = game.current(room)
+                if room["status"] != "playing" or room["host"] != player["id"]:
+                    raise ValueError("Only the host can pass an absent player's turn.")
+                if not absent or time.time()-absent["seen"] < 180:
+                    raise ValueError("Wait three minutes after the player disconnects.")
+                game.pass_turn(room,absent)
             elif action == "resign":
                 if room["status"] != "playing" or player.get("resigned"):
                     raise ValueError("You are not playing.")

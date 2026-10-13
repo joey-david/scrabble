@@ -6,10 +6,42 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const base = process.env.SCRABBLE_TEST_URL || "http://127.0.0.1:6087/scrabble/";
-const storage =
-  process.env.SCRABBLE_TEST_STORAGE || "/tmp/scrabble-dev.sqlite3";
+const storage = process.env.SCRABBLE_TEST_STORAGE || "/tmp/scrabble.sqlite3";
 const out = path.join(__dirname, "../test-results");
 fs.mkdirSync(out, { recursive: true });
+
+function seedRacks(code, letters) {
+  execFileSync("python3", [
+    "-c",
+    `import json,sqlite3,sys
+db=sqlite3.connect(sys.argv[1]); db.execute('BEGIN IMMEDIATE'); row=db.execute('SELECT state FROM rooms WHERE id=?',(sys.argv[2],)).fetchone(); r=json.loads(row[0]); pool=r['bag']+sum([p['rack'] for p in r['players']],[])
+for p,letters in zip(r['players'],json.loads(sys.argv[3])):
+ p['rack']=[]
+ for c in letters:
+  i=next(i for i,t in enumerate(pool) if t['letter']==c); p['rack'].append(pool.pop(i))
+r['bag']=pool; r['rev']+=1; db.execute('UPDATE rooms SET state=? WHERE id=?',(json.dumps(r),sys.argv[2])); db.commit()`,
+    storage,
+    code,
+    JSON.stringify(letters),
+  ]);
+}
+
+async function dragTo(page, from, to) {
+  await from.scrollIntoViewIfNeeded();
+  const source = await from.boundingBox(),
+    target = await to.boundingBox();
+  await page.mouse.move(
+    source.x + source.width / 2,
+    source.y + source.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    target.x + target.width / 2,
+    target.y + target.height / 2,
+    { steps: 10 },
+  );
+  await page.mouse.up();
+}
 
 async function main() {
   const browser = await chromium.launch({ headless: true });
@@ -84,18 +116,7 @@ async function main() {
     // Seed a legal, conserved bag so UI tests exercise repeatable human moves.
     if (!process.env.SCRABBLE_TEST_URL) {
       const code = new URL(a.url()).searchParams.get("room");
-      execFileSync("python3", [
-        "-c",
-        `import json,sqlite3,sys
-db=sqlite3.connect(sys.argv[1]); row=db.execute('SELECT state FROM rooms WHERE id=?',(sys.argv[2],)).fetchone(); r=json.loads(row[0]); pool=r['bag']+sum([p['rack'] for p in r['players']],[])
-for p,letters in zip(r['players'],['CAT?REI','SNTLODE']):
- p['rack']=[]
- for c in letters:
-  i=next(i for i,t in enumerate(pool) if t['letter']==c); p['rack'].append(pool.pop(i))
-r['bag']=pool; r['rev']+=1; db.execute('UPDATE rooms SET state=? WHERE id=?',(json.dumps(r),sys.argv[2])); db.commit()`,
-        storage,
-        code,
-      ]);
+      seedRacks(code, ["CAT?REI", "SNTLODE"]);
       await a.reload();
       await a.locator("#game").waitFor({ state: "visible" });
       await b.reload();
@@ -237,9 +258,123 @@ r['bag']=pool; r['rev']+=1; db.execute('UPDATE rooms SET state=? WHERE id=?',(js
     await b.locator("#modal").waitFor({ state: "visible" });
     await b.keyboard.press("Escape");
     assert.equal(await b.locator("#modal").isVisible(), false);
+    // End a game, return to the same room, and play the French rules.
+    await b.locator("#resign").tap();
+    await b.locator("#modal").getByRole("button", { name: "Confirm" }).tap();
+    await a.locator("#finished").waitFor({ state: "visible" });
+    assert.match(await a.locator("#winner").textContent(), /Alice wins/);
+    await a.locator("#rematch").click();
+    await a.locator("#lobby").waitFor({ state: "visible" });
+    await a.locator("#game-language").selectOption("fr");
+    await a.locator("#start").click();
+    await a.locator("#game").waitFor({ state: "visible" });
+    if (!process.env.SCRABBLE_TEST_URL) {
+      seedRacks(new URL(a.url()).searchParams.get("room"), [
+        "CHAT?ES",
+        "SNOLIER",
+      ]);
+      await a.reload();
+      await a.locator("#game").waitFor({ state: "visible" });
+      await b.reload();
+      await b.locator("#game").waitFor({ state: "visible" });
+      assert.equal(await a.locator('[data-pos="16"]').textContent(), "MD");
+      await dragTo(
+        a,
+        a.locator('.rack-tile[data-id^="C"]'),
+        a.locator('[data-pos="110"]'),
+      );
+      await a.locator('[data-pos="110"].draft').waitFor();
+      await dragTo(
+        a,
+        a.locator('[data-pos="110"]'),
+        a.locator('[data-pos="95"]'),
+      );
+      await a.locator('[data-pos="95"].draft').waitFor();
+      await dragTo(
+        a,
+        a.locator('[data-pos="95"]'),
+        a.locator('[data-pos="110"]'),
+      );
+      await a.locator('[data-pos="111"]').click();
+      await a.keyboard.type("hat");
+      await a.waitForFunction(() =>
+        document
+          .querySelector("#move-preview")
+          .textContent.includes("CHAT · 18 points"),
+      );
+      await a.locator("#play").click();
+      await b.waitForFunction(
+        () => document.querySelector("#turn-label").textContent === "Your turn",
+      );
+      await b.locator('.rack-tile[data-id^="S"]').tap();
+      await b.locator('[data-pos="114"]').tap();
+      await b.waitForFunction(() =>
+        document
+          .querySelector("#move-preview")
+          .textContent.includes("CHATS · 10 points"),
+      );
+      await b.locator("#play").tap();
+      await a.waitForFunction(
+        () => document.querySelector("#turn-label").textContent === "Your turn",
+      );
+      await a.locator("#history").getByText("CHAT", { exact: true }).waitFor();
+      await a.waitForFunction(
+        () =>
+          [...document.querySelectorAll("#history .definition")].some((el) =>
+            el.textContent.includes("Mammifère"),
+          ),
+        {},
+        { timeout: 30000 },
+      );
+      await a.screenshot({
+        path: path.join(out, "french-desktop.png"),
+        fullPage: true,
+      });
+      for (let n = 0; n < 6; n++) {
+        const page = n % 2 === 0 ? a : b;
+        const result = await page.evaluate(async () => {
+          const code = new URL(location.href).searchParams.get("room"),
+            root = "/scrabble/api/room/" + code;
+          const room = await (await fetch(root)).json();
+          return (
+            await fetch(root, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                action: "pass",
+                rev: room.rev,
+                request_id: crypto.randomUUID(),
+              }),
+            })
+          ).json();
+        });
+        assert.equal(result.error, undefined);
+      }
+      await a.locator("#finished").waitFor({ state: "visible" });
+      await a.locator("#rematch").click();
+      await a.locator("#lobby").waitFor({ state: "visible" });
+      await a.locator("#edit-profile").click();
+      await a.locator("#modal").getByLabel("Your name").fill("Alice II");
+      await a
+        .locator("#modal")
+        .getByRole("button", { name: "Confirm" })
+        .click();
+      await a
+        .locator("#lobby-players")
+        .getByText("Alice II", { exact: true })
+        .waitFor();
+      await a.locator("#leave").click();
+      await a
+        .locator("#modal")
+        .getByRole("button", { name: "Confirm" })
+        .click();
+      await b.waitForFunction(() =>
+        document.querySelector("#host-note").textContent.includes("You host"),
+      );
+    }
     assert.deepEqual(errors, []);
     console.log(
-      "PASS: two sessions, profiles, lobby, settings, gameplay, drafts, definitions, focus, mobile layout, keyboard, exchange, pass.",
+      "PASS: two sessions, profiles, lobby, settings, English/French gameplay, drafts, definitions, focus, mobile layout, keyboard, drag, exchange, pass, resignation, end scores, rematch, host transfer.",
     );
   } finally {
     await browser.close();

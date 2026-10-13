@@ -285,7 +285,8 @@ let avatar = "",
   lastPlayers = "",
   previewTimer,
   noticeTimer,
-  renderedHistory = "";
+  renderedHistory = "",
+  historyObserver = null;
 let previewGeneration = 0,
   networkDown = false,
   drag = null,
@@ -449,6 +450,9 @@ function playerNode(person, seat = false) {
 }
 
 function renderPlayers(force = false) {
+  const turnPlayer = room.players.find((p) => p.id === room.turn);
+  $("skip-absent").hidden =
+    room.status !== "playing" || !isHost() || !turnPlayer || turnPlayer.online;
   const fingerprint = JSON.stringify([
     room.players,
     room.host,
@@ -546,6 +550,11 @@ function acceptRoom(value) {
 }
 
 function render(force = false) {
+  if (!room.me && room.status === "lobby") {
+    $("welcome").hidden = false;
+    $("room").hidden = true;
+    return;
+  }
   $("welcome").hidden = true;
   $("room").hidden = false;
   $("lobby").hidden = room.status !== "lobby";
@@ -554,6 +563,11 @@ function render(force = false) {
   $("room-code").textContent =
     `${room.public ? (locale === "fr" ? "Salon public" : "Public room") : locale === "fr" ? "Sur invitation" : "Invite-only"} · ${room.id}`;
   $("host-note").textContent = t(isHost() ? "hosting" : "waitingHost");
+  $("leave").hidden = !room.me;
+  $("join-other").hidden = Boolean(room.me);
+  $("edit-profile").hidden = !room.me;
+  $("skip-absent").textContent =
+    locale === "fr" ? "Passer le joueur absent" : "Pass absent player";
   renderPlayers(force);
   if (room.status === "lobby") {
     $("settings-fields").disabled = !isHost();
@@ -1097,7 +1111,8 @@ function renderHistory() {
     ...(items.length ? items : [node("p", "fine", t("noMoves"))]),
   );
   // Load the recent moves first; older entries load when the user scrolls to them.
-  const observer = new IntersectionObserver(
+  historyObserver?.disconnect();
+  historyObserver = new IntersectionObserver(
     (entries) =>
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
@@ -1106,14 +1121,14 @@ function renderHistory() {
             entry.target,
             room.settings.language,
           );
-          observer.unobserve(entry.target);
+          historyObserver.unobserve(entry.target);
         }
       }),
     { root: $("history"), rootMargin: "100px" },
   );
   $("history")
     .querySelectorAll("[data-word]")
-    .forEach((el) => observer.observe(el));
+    .forEach((el) => historyObserver.observe(el));
 }
 
 function dialog(title, contents, actions = []) {
@@ -1232,6 +1247,7 @@ async function join(create = false) {
     busy = false;
     $("join-button").disabled = false;
     $("create-room").disabled = false;
+    if (room?.status === "lobby") $("start").disabled = room.players.length < 2;
   }
 }
 
@@ -1296,6 +1312,60 @@ $("invite").addEventListener("click", async () => {
 $("leave").addEventListener("click", () =>
   confirmAction("leaveTitle", "leaveHint", () => act("leave")),
 );
+$("join-other").addEventListener("click", () => {
+  localStorage.removeItem("scrabble-room");
+  location.href = "/scrabble/";
+});
+$("skip-absent").addEventListener("click", () => act("skip_absent"));
+$("edit-profile").addEventListener("click", () => {
+  const person = room.players.find((p) => p.id === room.me);
+  avatar = person.avatar;
+  const label = node("label", "", t("name")),
+    input = node("input");
+  input.value = person.name;
+  input.maxLength = 24;
+  input.required = true;
+  label.append(input);
+  const photoLabel = node("label", "", t("choosePhoto")),
+    photo = node("input");
+  photo.type = "file";
+  photo.accept = "image/png,image/jpeg,image/webp";
+  photoLabel.append(photo);
+  const preview = avatarNode(person, true);
+  photo.addEventListener("change", async () => {
+    try {
+      await readPhoto(photo.files[0]);
+      preview.replaceChildren(
+        ...avatarNode({ name: input.value, avatar }).childNodes,
+      );
+    } catch (error) {
+      notice(error.message, true);
+    }
+  });
+  const remove = node("button", "quiet", t("removePhoto"));
+  remove.addEventListener("click", () => {
+    avatar = "";
+    preview.replaceChildren(input.value[0]?.toUpperCase() || "?");
+  });
+  dialog(
+    t("editProfile"),
+    [label, preview, photoLabel, remove],
+    [
+      {
+        text: t("confirm"),
+        primary: true,
+        run: async () => {
+          if (!input.reportValidity()) return;
+          if (await act("profile", { name: input.value, avatar })) {
+            $("modal").close();
+            notice(t("profileSaved"));
+          }
+        },
+      },
+      { text: t("cancel"), run: () => $("modal").close() },
+    ],
+  );
+});
 $("resign").addEventListener("click", () =>
   confirmAction("resignTitle", "resignHint", () => act("resign")),
 );

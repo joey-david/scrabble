@@ -1,5 +1,7 @@
 import tempfile
 import unittest
+import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from server import Store, profile
@@ -75,6 +77,34 @@ class Rooms(unittest.TestCase):
     def test_profile_input(self):
         for data in ({"name":""},{"name":"A","avatar":"https://example.com/a.png"},{"name":"A","avatar":"data:image/png;base64,YWJj"}):
             with self.assertRaises(ValueError): profile(data)
+
+    def test_presence_and_absent_host(self):
+        bob = self.store.join(self.b,{"name":"Bob","room":self.code})["me"]
+        room = self.store.room(self.a,self.code,focused=False)
+        alice = next(p for p in room["players"] if p["id"] == room["me"])
+        self.assertTrue(alice["online"])
+        self.assertFalse(alice["focused"])
+        self.action(self.a,"settings",settings={"language":"en","random_first":False})
+        self.action(self.a,"start")
+        with self.store.connection() as db:
+            room = self.store.load(db,self.code)
+            room["players"][0]["seen"] = time.time()-181
+            self.store.save(db,room)
+        room = self.store.room(self.b,self.code)
+        self.assertEqual(room["host"],bob)
+        self.assertFalse(room["players"][0]["online"])
+        room = self.action(self.b,"skip_absent")
+        self.assertEqual(room["turn"],bob)
+        self.assertEqual(room["history"][-1]["kind"],"pass")
+
+    def test_concurrent_retries_apply_once(self):
+        self.store.join(self.b,{"name":"Bob","room":self.code})
+        self.action(self.a,"settings",settings={"language":"en","random_first":False})
+        room = self.action(self.a,"start")
+        data = {"action":"pass","rev":room["rev"],"request_id":"concurrent_123"}
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            values = list(pool.map(lambda _: self.store.action(self.a,self.code,data),range(4)))
+        self.assertTrue(all(len(value["history"]) == 1 for value in values))
 
 
 if __name__ == "__main__": unittest.main()

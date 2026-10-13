@@ -159,7 +159,8 @@ nav {
   font-size: 12px;
   background: transparent;
 }
-.language-switch button[aria-pressed="true"] {
+.language-switch button[aria-pressed="true"],
+.language-switch button[aria-pressed="true"]:hover {
   background: var(--green);
   color: white;
 }
@@ -577,6 +578,7 @@ fieldset {
   color: #a2783c;
 }
 .cell.draft {
+  touch-action: none;
   background: #fff0c9;
   outline: 2px solid #68937c;
   outline-offset: -2px;

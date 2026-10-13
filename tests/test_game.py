@@ -101,6 +101,27 @@ class Rules(unittest.TestCase):
         room["board"][15] = {"letter":"T","points":1}
         self.assertEqual(game.word_cells(room["board"],14,1),[14])
 
+    def test_main_and_cross_word_score(self):
+        room,p = fixture()
+        room["board"][111] = {"letter":"A","points":1}
+        room["board"][112] = {"letter":"A","points":1}
+        rack(p,"AT")
+        result = game.validate(room,p,placements("AT",[126,127]))
+        self.assertEqual([w["word"] for w in result["words"]],["AT","AA","AT"])
+        self.assertEqual(result["score"],8)  # New A covers DL in both words.
+        room["board"][112] = {"letter":"C","points":3}
+        with self.assertRaisesRegex(ValueError,"CT"):
+            game.validate(room,p,placements("AT",[126,127]))
+
+    def test_multiple_word_multipliers(self):
+        room,p = fixture()
+        for pos,c in zip([1,2,3,4,5,6],"EATING"):
+            room["board"][pos] = {"letter":c,"points":1}
+        rack(p,"SS")
+        result = game.validate(room,p,placements("SS",[0,7]))
+        self.assertEqual(result["words"][0]["word"],"SEATINGS")
+        self.assertEqual(result["score"],72)
+
     def test_exchange_conserves_and_does_not_redraw_returned_tiles(self):
         room,p = fixture()
         before = Counter(t["id"] for t in room["bag"]+sum([p["rack"] for p in room["players"]],[]))

@@ -19,6 +19,11 @@
       "13": 33346,
       "14": 21140,
       "15": 12228
+    },
+    "cross_check": {
+      "source": "https://dico.voc-ods.fr/statistiques-ods9",
+      "words": 407128,
+      "length_counts_match": true
     }
   },
   "en": {
@@ -41,6 +46,13 @@
       "13": 14435,
       "14": 9437,
       "15": 5956
+    },
+    "cross_check": {
+      "source": "https://github.com/woogles-io/liwords/blob/master/liwords-ui/public/wasm/2024/CSW24.kwg",
+      "sha256": "62ca7a84f07429a9976f77a4f74b94911aca5d49cce050dce72dd0e032c0566f",
+      "words": 280887,
+      "missing": 0,
+      "extra": 0
     }
   }
 }
