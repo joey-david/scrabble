@@ -157,10 +157,13 @@ class Store:
 
     def view(self, room, sid):
         value = copy.deepcopy(room)
+        member = any(p["sid"] == sid and not p.get("left") for p in room["players"])
         value.pop("requests", None)
         value["bag_count"] = len(value.pop("bag"))
         value["me"] = None
         for p in value["players"]:
+            if member and p.get("revealed"):
+                p["shared_rack"] = [{"letter":t["letter"],"points":t["points"]} for t in p["rack"]]
             if p.pop("sid") == sid:
                 value["me"] = p["id"]
                 value["rack"] = p["rack"]
@@ -200,7 +203,7 @@ class Store:
                 self.save(db,room)
                 return self.view(room,sid)
             # Personal actions do not depend on the board revision.
-            if data.get("rev") != room["rev"] and action not in ("leave", "resign", "profile"):
+            if data.get("rev") != room["rev"] and action not in ("leave", "resign", "profile", "reveal"):
                 raise ValueError("The room changed. Refresh your move and try again.")
             if action == "preview":
                 self.check_turn(room,player)
@@ -228,6 +231,12 @@ class Store:
                     if any(time.time()-p["seen"] > 35 for p in room["players"]):
                         raise ValueError("Wait for each player to reconnect before starting.")
                     game.start(room)
+            elif action == "reveal":
+                if room["status"] != "playing" or player.get("resigned") or player.get("left"):
+                    raise ValueError("You are not playing.")
+                if type(data.get("revealed")) is not bool:
+                    raise ValueError("Invalid rack visibility.")
+                player["revealed"] = data["revealed"]
             elif action == "profile":
                 value = profile(data)
                 player.update(value)

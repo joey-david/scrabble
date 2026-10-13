@@ -124,5 +124,21 @@ class Rooms(unittest.TestCase):
         room = self.store.action(self.b,self.code,{"action":"resign","rev":room["rev"],"request_id":"stale_resign"})
         self.assertEqual(room["status"],"finished")
 
+    def test_reveal_own_rack_then_hide_after_turn(self):
+        self.store.join(self.b,{"name":"Bob","room":self.code})
+        self.action(self.a,"settings",settings={"language":"en","random_first":False})
+        self.action(self.a,"start")
+        alice = self.action(self.a,"reveal",revealed=True)["me"]
+        bob_view = self.store.room(self.b,self.code)
+        shared = next(p for p in bob_view["players"] if p["id"] == alice)["shared_rack"]
+        self.assertEqual(len(shared),7)
+        self.assertTrue(all(set(t) == {"letter","points"} for t in shared))
+        self.assertTrue(all("shared_rack" not in p for p in self.store.room("outsider",self.code)["players"]))
+        self.action(self.a,"reveal",revealed=False)
+        self.assertTrue(all("shared_rack" not in p for p in self.store.room(self.b,self.code)["players"]))
+        self.action(self.a,"reveal",revealed=True)
+        self.action(self.a,"pass")
+        self.assertTrue(all("shared_rack" not in p for p in self.store.room(self.b,self.code)["players"]))
+
 
 if __name__ == "__main__": unittest.main()

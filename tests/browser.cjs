@@ -241,6 +241,89 @@ async function eightPlayerLayout(browser) {
   }
 }
 
+async function revealRack(browser) {
+  const contexts = await Promise.all([
+    browser.newContext(),
+    browser.newContext(),
+  ]);
+  let code;
+  try {
+    for (const context of contexts)
+      await context.request.get(base + "api/session");
+    let state = await (
+      await contexts[0].request.post(base + "api/join", {
+        data: { name: "Alice", create: true },
+      })
+    ).json();
+    code = state.id;
+    state = await (
+      await contexts[1].request.post(base + "api/join", {
+        data: { name: "Bob", room: code },
+      })
+    ).json();
+    state = await (
+      await contexts[0].request.post(base + "api/room/" + code, {
+        data: {
+          action: "settings",
+          rev: state.rev,
+          request_id: crypto.randomUUID(),
+          settings: { language: "en", random_first: false },
+        },
+      })
+    ).json();
+    await contexts[0].request.post(base + "api/room/" + code, {
+      data: {
+        action: "start",
+        rev: state.rev,
+        request_id: crypto.randomUUID(),
+      },
+    });
+    const [a, b] = await Promise.all(
+      contexts.map((context) => context.newPage()),
+    );
+    for (const page of [a, b]) {
+      await page.goto(base + "?room=" + code);
+      await page.locator("#game").waitFor({ state: "visible" });
+    }
+    await a.locator("#reveal").click();
+    await b.locator(".shared-rack").waitFor();
+    assert.equal(await b.locator(".shared-tile").count(), 7);
+    await a.locator("#reveal").click();
+    await b.locator(".shared-rack").waitFor({ state: "hidden" });
+    await a.locator("#reveal").click();
+    await b.locator("#reveal").click();
+    await a.locator(".shared-rack").waitFor();
+    await playOpening(a);
+    await b.locator(".shared-rack").waitFor({ state: "hidden" });
+    await a.locator(".shared-rack").waitFor({ state: "hidden" });
+    assert.equal(
+      await a.locator("#reveal").getAttribute("aria-pressed"),
+      "false",
+    );
+    await b.waitForFunction(
+      () =>
+        document.querySelector("#reveal").getAttribute("aria-pressed") ===
+        "false",
+    );
+  } finally {
+    if (code)
+      for (const context of contexts) {
+        const state = await (
+          await context.request.get(base + "api/room/" + code)
+        ).json();
+        if (state.me)
+          await context.request.post(base + "api/room/" + code, {
+            data: {
+              action: "leave",
+              rev: state.rev,
+              request_id: crypto.randomUUID(),
+            },
+          });
+      }
+    await Promise.all(contexts.map((context) => context.close()));
+  }
+}
+
 async function main() {
   const browser = await chromium.launch({ headless: true });
   const contexts = await Promise.all([
@@ -256,6 +339,13 @@ async function main() {
   for (const page of [a, b])
     page.on("pageerror", (e) => errors.push(e.message));
   try {
+    if (process.env.SCRABBLE_TEST_REVEAL_ONLY) {
+      await revealRack(browser);
+      console.log(
+        "PASS: opt-in reveal, manual hide, and automatic hide after play for both players.",
+      );
+      return;
+    }
     if (process.env.SCRABBLE_TEST_EIGHT_ONLY) {
       await eightPlayerLayout(browser);
       console.log("PASS: eight concurrent players and small desktop layout.");

@@ -44,6 +44,8 @@ class Rules(unittest.TestCase):
     def test_first_word_and_atomic_reject(self):
         room,p = fixture()
         rack(p,"CAT")
+        p["revealed"] = True
+        room["players"][1]["revealed"] = True
         self.assertEqual(game.validate(room,p,placements("CAT",[111,112,113]))["score"],10)
         before = copy.deepcopy(room)
         with self.assertRaisesRegex(ValueError,"centre"):
@@ -52,6 +54,7 @@ class Rules(unittest.TestCase):
         game.play(room,p,placements("CAT",[111,112,113]),0)
         self.assertEqual(p["score"],10)
         self.assertEqual(room["turn"],"b")
+        self.assertTrue(all(not p["revealed"] for p in room["players"]))
 
     def test_geometry_and_inventory(self):
         room,p = fixture()

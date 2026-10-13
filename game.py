@@ -92,7 +92,7 @@ def start(room, now=None):
     room.update(status="playing", board=[None]*225, bag=tile_bag(room["settings"]["language"]),
                 history=[], passes=0, turn_started=now, last_tick=now, end_reason=None)
     for player in room["players"]:
-        player.update(score=0, rack=[], resigned=False, seconds=room["settings"]["minutes"]*60)
+        player.update(score=0, rack=[], resigned=False, revealed=False, seconds=room["settings"]["minutes"]*60)
         refill(room, player)
     room["turn"] = (random.SystemRandom().choice(room["players"]) if room["settings"]["random_first"]
                     else room["players"][0])["id"]
@@ -187,6 +187,7 @@ def finish(room, reason, winner=None):
         return
     penalty = 0
     for p in room["players"]:
+        p["revealed"] = False
         if not p.get("resigned"):
             remainder = sum(t["points"] for t in p["rack"])
             p["score"] -= remainder
@@ -199,6 +200,8 @@ def finish(room, reason, winner=None):
 
 
 def advance(room, now=None):
+    for p in room["players"]:
+        p["revealed"] = False
     now = time.time() if now is None else now
     players = active(room)
     if len(players) <= 1:

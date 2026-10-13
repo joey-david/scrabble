@@ -21,6 +21,8 @@ const messages = {
     saveSettings: "Save",
     start: "Start",
     yourRack: "Letters",
+    reveal: "Show letters",
+    hideRack: "Hide letters",
     zoom: "Zoom",
     shuffle: "Shuffle",
     sort: "A–Z",
@@ -139,6 +141,8 @@ const messages = {
     saveSettings: "Enregistrer",
     start: "Lancer",
     yourRack: "Lettres",
+    reveal: "Montrer les lettres",
+    hideRack: "Masquer les lettres",
     zoom: "Zoom",
     shuffle: "Mélanger",
     sort: "A–Z",
@@ -416,6 +420,14 @@ function playerNode(person, seat = false) {
     const score = node("div", "player-score", String(person.score));
     score.title = `${person.rack_count} ${t("yourRack").toLowerCase()}`;
     el.append(score);
+  }
+  if (person.id !== room.me && person.shared_rack) {
+    const rack = node("div", "shared-rack");
+    rack.setAttribute("aria-label", `${person.name}: ${t("yourRack")}`);
+    for (const tile of person.shared_rack)
+      rack.append(tileElement(tile, "shared-tile", false));
+    el.classList.add("has-shared-rack");
+    el.append(rack);
   }
   return el;
 }
@@ -975,6 +987,11 @@ function reorder(offset) {
 }
 
 function updateControls() {
+  const me = room.players.find((p) => p.id === room.me);
+  $("reveal").hidden = room.status !== "playing" || !me || me.resigned;
+  $("reveal").disabled = busy;
+  $("reveal").textContent = t(me?.revealed ? "hideRack" : "reveal");
+  $("reveal").setAttribute("aria-pressed", String(Boolean(me?.revealed)));
   $("play").disabled = !myTurn() || !drafts.length || busy;
   $("exchange").disabled = !myTurn() || busy || room.bag_count < 7;
   $("pass").disabled = !myTurn() || busy;
@@ -1418,6 +1435,11 @@ $("recall").addEventListener("click", () => {
   selected = null;
   changedDrafts();
 });
+$("reveal").addEventListener("click", () =>
+  act("reveal", {
+    revealed: !room.players.find((p) => p.id === room.me).revealed,
+  }),
+);
 $("return-tile").addEventListener("click", () => {
   drafts = drafts.filter((d) => d.id !== selected);
   selected = null;
