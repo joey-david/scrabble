@@ -1,0 +1,46 @@
+{
+  "fr": {
+    "edition": "ODS9",
+    "source": "https://raw.githubusercontent.com/Thecoolsim/ODS9/main/words.js",
+    "words": 407128,
+    "sha256": "b7c12bd7c67e85e661b4ad88c081666ac72f73ffb292a172d248a5b6efcdea48",
+    "length_counts": {
+      "2": 81,
+      "3": 639,
+      "4": 2657,
+      "5": 8059,
+      "6": 18178,
+      "7": 32555,
+      "8": 48587,
+      "9": 60319,
+      "10": 63736,
+      "11": 58524,
+      "12": 47079,
+      "13": 33346,
+      "14": 21140,
+      "15": 12228
+    }
+  },
+  "en": {
+    "edition": "CSW24",
+    "source": "https://raw.githubusercontent.com/aitcfriatcsu-hub/Word-Lists/main/CSW24.txt",
+    "words": 280887,
+    "sha256": "4200a40a888042ac4fa95d42ed3de82952301401df62c395180cdc2e67d63893",
+    "length_counts": {
+      "2": 127,
+      "3": 1351,
+      "4": 5662,
+      "5": 13018,
+      "6": 23140,
+      "7": 34506,
+      "8": 42341,
+      "9": 43180,
+      "10": 37434,
+      "11": 29175,
+      "12": 21125,
+      "13": 14435,
+      "14": 9437,
+      "15": 5956
+    }
+  }
+}
