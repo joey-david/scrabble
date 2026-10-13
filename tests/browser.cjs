@@ -167,6 +167,82 @@ else: raise SystemExit('No opening two-letter word in rack')`,
   await page.locator("#history .word").first().waitFor();
 }
 
+async function eightPlayerLayout(browser) {
+  const players = await Promise.all(
+    Array.from({ length: 8 }, () =>
+      browser.newContext({ viewport: { width: 1024, height: 600 } }),
+    ),
+  );
+  let code;
+  try {
+    for (const player of players)
+      await player.request.get(base + "api/session");
+    const first = await (
+      await players[0].request.post(base + "api/join", {
+        data: { name: "P1", create: true },
+      })
+    ).json();
+    code = first.id;
+    await Promise.all(
+      players
+        .slice(1)
+        .map((player, i) =>
+          player.request.post(base + "api/join", {
+            data: { name: `P${i + 2}`, room: code },
+          }),
+        ),
+    );
+    let room = await (
+      await players[0].request.get(base + "api/room/" + code)
+    ).json();
+    room = await (
+      await players[0].request.post(base + "api/room/" + code, {
+        data: {
+          action: "settings",
+          rev: room.rev,
+          request_id: crypto.randomUUID(),
+          settings: { language: "en", random_first: false },
+        },
+      })
+    ).json();
+    await players[0].request.post(base + "api/room/" + code, {
+      data: { action: "start", rev: room.rev, request_id: crypto.randomUUID() },
+    });
+    const page = await players[0].newPage();
+    await page.goto(base + "?room=" + code);
+    await page.locator("#game").waitFor({ state: "visible" });
+    assert.equal(await page.locator("#score-players .player").count(), 8);
+    await page.screenshot({
+      path: path.join(out, "eight-player-small-desktop.png"),
+      fullPage: true,
+      animations: "disabled",
+    });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollHeight > innerHeight,
+      ),
+      false,
+      "eight players must fit a small desktop",
+    );
+  } finally {
+    if (code)
+      for (const player of players) {
+        const room = await (
+          await player.request.get(base + "api/room/" + code)
+        ).json();
+        if (room.me)
+          await player.request.post(base + "api/room/" + code, {
+            data: {
+              action: "leave",
+              rev: room.rev,
+              request_id: crypto.randomUUID(),
+            },
+          });
+      }
+    await Promise.all(players.map((player) => player.close()));
+  }
+}
+
 async function main() {
   const browser = await chromium.launch({ headless: true });
   const contexts = await Promise.all([
@@ -182,6 +258,11 @@ async function main() {
   for (const page of [a, b])
     page.on("pageerror", (e) => errors.push(e.message));
   try {
+    if (process.env.SCRABBLE_TEST_EIGHT_ONLY) {
+      await eightPlayerLayout(browser);
+      console.log("PASS: eight concurrent players and small desktop layout.");
+      return;
+    }
     await a.goto(base);
     await a.locator('[data-locale="en"]').click();
     await a.screenshot({
@@ -570,6 +651,7 @@ async function main() {
       );
     }
     assert.deepEqual(errors, []);
+    await eightPlayerLayout(browser);
     console.log(
       process.env.SCRABBLE_TEST_URL
         ? "PASS: public route, two sessions, profiles, host settings, English/French accepted words, mobile layout, resignation, and rematch."
@@ -602,6 +684,12 @@ async function main() {
   }
 }
 main().catch((error) => {
-  console.error(error);
+  console.error(error.name + ": " + error.message.split("Call log:")[0]);
+  console.error(
+    error.stack
+      ?.split("\n")
+      .filter((line) => line.startsWith("    at "))
+      .join("\n") || "",
+  );
   process.exitCode = 1;
 });

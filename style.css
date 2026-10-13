@@ -1017,6 +1017,27 @@ dialog .avatar {
     max-width: 310px;
   }
 }
+@media (min-width: 761px) and (max-height: 700px) {
+  .game-sidebar {
+    gap: 16px;
+  }
+  .rack-panel .section-heading {
+    margin-bottom: 8px;
+  }
+  .rack {
+    min-height: 52px;
+  }
+  .rack-tile {
+    height: 40px;
+  }
+  .player {
+    padding: 5px 0;
+  }
+  .player .avatar {
+    width: 26px;
+    height: 26px;
+  }
+}
 @media (max-width: 350px) {
   .rack {
     gap: 5px;

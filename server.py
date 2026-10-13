@@ -384,7 +384,10 @@ def main():
     parser.add_argument("--storage",type=Path,default=Path.home()/"joeydavid.fyi/scrabble/rooms.sqlite3")
     args = parser.parse_args()
     args.storage.parent.mkdir(parents=True,exist_ok=True)
-    server = ThreadingHTTPServer((args.bind,args.port),Handler)
+    server = ThreadingHTTPServer((args.bind,args.port),Handler,bind_and_activate=False)
+    server.request_queue_size = 64
+    server.server_bind()
+    server.server_activate()
     server.store = Store(args.storage)
     print(f"Scrabble listening on {args.bind}:{args.port}",flush=True)
     server.serve_forever()
