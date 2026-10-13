@@ -7,7 +7,11 @@ const path = require("node:path");
 
 const base = process.env.SCRABBLE_TEST_URL || "http://127.0.0.1:6087/scrabble/";
 const storage = process.env.SCRABBLE_TEST_STORAGE || "/tmp/scrabble.sqlite3";
-const out = path.join(__dirname, "../test-results");
+const out = path.join(
+  __dirname,
+  "../test-results",
+  process.env.SCRABBLE_TEST_URL ? "live" : "local",
+);
 fs.mkdirSync(out, { recursive: true });
 
 function seedRacks(code, letters) {
@@ -41,6 +45,51 @@ async function dragTo(page, from, to) {
     { steps: 10 },
   );
   await page.mouse.up();
+}
+
+async function playOpening(page) {
+  const room = await page.evaluate(async () =>
+    (
+      await fetch(
+        "/scrabble/api/room/" + new URL(location.href).searchParams.get("room"),
+      )
+    ).json(),
+  );
+  const move = JSON.parse(
+    execFileSync(
+      "python3",
+      [
+        "-c",
+        `import json,sys,game
+r=json.loads(sys.argv[1]);p={'id':r['me'],'rack':r['rack']}
+for word in sorted(game.WORDS[r['settings']['language']]):
+ if len(word)!=2: continue
+ rack=list(p['rack']); placements=[]
+ for i,c in enumerate(word):
+  tile=next((t for t in rack if t['letter']==c),None) or next((t for t in rack if t['letter']=='?'),None)
+  if not tile: break
+  rack.remove(tile);placements.append({'id':tile['id'],'pos':112+i,'letter':c,'blank':tile['letter']=='?'})
+ if len(placements)==2:
+  print(json.dumps(placements));break
+else: raise SystemExit('No opening two-letter word in rack')`,
+        JSON.stringify(room),
+      ],
+      { cwd: path.join(__dirname, ".."), encoding: "utf8" },
+    ),
+  );
+  for (const tile of move) {
+    await page.locator(`.rack-tile[data-id="${tile.id}"]`).click();
+    await page.locator(`[data-pos="${tile.pos}"]`).click();
+    if (tile.blank)
+      await page
+        .getByRole("button", { name: tile.letter, exact: true })
+        .click();
+  }
+  await page.waitForFunction(() =>
+    document.querySelector("#move-preview").classList.contains("valid"),
+  );
+  await page.locator("#play").click();
+  await page.locator("#history .word").first().waitFor();
 }
 
 async function main() {
@@ -80,13 +129,11 @@ async function main() {
       }),
       "base64",
     );
-    await b
-      .locator("#photo")
-      .setInputFiles({
-        name: "avatar.png",
-        mimeType: "image/png",
-        buffer: photo,
-      });
+    await b.locator("#photo").setInputFiles({
+      name: "avatar.png",
+      mimeType: "image/png",
+      buffer: photo,
+    });
     await b.locator("#photo-preview img").waitFor();
     await b.locator("#join-button").click();
     await b.locator("#lobby").waitFor({ state: "visible" });
@@ -113,6 +160,7 @@ async function main() {
     await b.locator("#game").waitFor({ state: "visible" });
     assert.equal(await b.locator("#play").isDisabled(), true);
 
+    if (process.env.SCRABBLE_TEST_URL) await playOpening(a);
     // Seed a legal, conserved bag so UI tests exercise repeatable human moves.
     if (!process.env.SCRABBLE_TEST_URL) {
       const code = new URL(a.url()).searchParams.get("room");
@@ -268,6 +316,7 @@ async function main() {
     await a.locator("#game-language").selectOption("fr");
     await a.locator("#start").click();
     await a.locator("#game").waitFor({ state: "visible" });
+    if (process.env.SCRABBLE_TEST_URL) await playOpening(a);
     if (!process.env.SCRABBLE_TEST_URL) {
       seedRacks(new URL(a.url()).searchParams.get("room"), [
         "CHAT?ES",
@@ -374,9 +423,30 @@ async function main() {
     }
     assert.deepEqual(errors, []);
     console.log(
-      "PASS: two sessions, profiles, lobby, settings, English/French gameplay, drafts, definitions, focus, mobile layout, keyboard, drag, exchange, pass, resignation, end scores, rematch, host transfer.",
+      process.env.SCRABBLE_TEST_URL
+        ? "PASS: public route, two sessions, profiles, host settings, English/French accepted words, mobile layout, resignation, and rematch."
+        : "PASS: two sessions, profiles, lobby, settings, English/French gameplay, drafts, definitions, focus, mobile layout, keyboard, drag, exchange, pass, resignation, end scores, rematch, host transfer.",
     );
   } finally {
+    for (const page of [a, b])
+      await page
+        .evaluate(async () => {
+          const code = new URL(location.href).searchParams.get("room");
+          if (!code) return;
+          const root = "/scrabble/api/room/" + code,
+            room = await (await fetch(root)).json();
+          if (room.me)
+            await fetch(root, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                action: "leave",
+                rev: room.rev,
+                request_id: crypto.randomUUID(),
+              }),
+            });
+        })
+        .catch(() => {});
     await browser.close();
   }
 }

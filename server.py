@@ -199,7 +199,8 @@ class Store:
             if [player["id"], request_id] in room["requests"]:
                 self.save(db,room)
                 return self.view(room,sid)
-            if data.get("rev") != room["rev"]:
+            # Personal actions do not depend on the board revision.
+            if data.get("rev") != room["rev"] and action not in ("leave", "resign", "profile"):
                 raise ValueError("The room changed. Refresh your move and try again.")
             if action == "preview":
                 self.check_turn(room,player)

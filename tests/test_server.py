@@ -24,18 +24,29 @@ class Rooms(unittest.TestCase):
         return self.store.action(sid,self.code,{"action":action,"rev":room["rev"],"request_id":"request_"+str(room["rev"]),**extra})
 
     def test_host_and_capacity(self):
+        sessions = [self.a,self.b]
         self.store.join(self.b,{"name":"Bob","room":self.code})
         with self.assertRaisesRegex(ValueError,"host"):
             self.action(self.b,"start")
         for i in range(6):
             sid,_,_ = self.store.session(None)
             self.store.join(sid,{"name":str(i),"room":self.code})
+            sessions.append(sid)
         sid,_,_ = self.store.session(None)
         with self.assertRaisesRegex(ValueError,"full"):
             self.store.join(sid,{"name":"Extra","room":self.code})
         self.assertEqual(len(self.store.room(self.a,self.code)["players"]),8)
         next_room = self.store.join(sid,{"name":"Extra"})
         self.assertNotEqual(next_room["id"],self.code)
+        self.action(self.a,"settings",settings={"language":"en","random_first":False})
+        room = self.action(self.a,"start")
+        self.assertEqual(room["bag_count"],44)
+        self.assertTrue(all(p["rack_count"] == 7 for p in room["players"]))
+        for sid in sessions: room = self.action(sid,"pass")
+        self.assertEqual(room["status"],"playing")
+        self.assertEqual(room["turn"],self.store.room(self.a,self.code)["me"])
+        for sid in sessions: room = self.action(sid,"pass")
+        self.assertEqual(room["status"],"finished")
 
     def test_private_racks_and_persistence(self):
         self.store.join(self.b,{"name":"Bob","room":self.code})
@@ -105,6 +116,13 @@ class Rooms(unittest.TestCase):
         with ThreadPoolExecutor(max_workers=4) as pool:
             values = list(pool.map(lambda _: self.store.action(self.a,self.code,data),range(4)))
         self.assertTrue(all(len(value["history"]) == 1 for value in values))
+
+    def test_resign_after_unseen_move(self):
+        self.store.join(self.b,{"name":"Bob","room":self.code})
+        room = self.action(self.a,"start")
+        self.action(self.a,"profile",name="Alice II")
+        room = self.store.action(self.b,self.code,{"action":"resign","rev":room["rev"],"request_id":"stale_resign"})
+        self.assertEqual(room["status"],"finished")
 
 
 if __name__ == "__main__": unittest.main()
