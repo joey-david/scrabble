@@ -138,7 +138,7 @@ class Store:
                     raise ValueError("This game has started. You can watch, or join another lobby.")
                 if len(room["players"]) >= 8:
                     raise ValueError("This room is full (eight players).")
-                member = {"id": secrets.token_urlsafe(8), "sid": sid, "rack": [], "score": 0, "seconds": 0}
+                member = {"id": secrets.token_urlsafe(8), "sid": sid, "rack": [], "score": 0, "seconds": 0, "focused": True}
                 room["players"].append(member)
                 if not room["host"]:
                     room["host"] = member["id"]
@@ -167,12 +167,14 @@ class Store:
                           for letter,(count,points) in zip(game.LETTERS,game.TILES[language])}
         return value
 
-    def room(self, sid, code):
+    def room(self, sid, code, focused=None):
         with self.connection() as db:
             room = self.load(db,code)
             for p in room["players"]:
                 if p["sid"] == sid:
                     p["seen"] = time.time()
+                    if focused is not None:
+                        p["focused"] = focused
             self.save(db,room)
             return self.view(room,sid)
 
@@ -319,7 +321,9 @@ class Handler(BaseHTTPRequestHandler):
             if path == "api/session":
                 return self.reply({"profile":person})
             if path.startswith("api/room/"):
-                return self.reply(self.server.store.room(sid,path.removeprefix("api/room/")))
+                focused = parse_qs(parsed.query).get("focused", [None])[0]
+                return self.reply(self.server.store.room(sid,path.removeprefix("api/room/"),
+                                                        None if focused is None else focused == "1"))
             if path == "api/definition":
                 query = parse_qs(parsed.query)
                 return self.reply(self.server.store.definition(query.get("language",[""])[0],query.get("word",[""])[0]))

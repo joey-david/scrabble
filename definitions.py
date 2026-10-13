@@ -67,7 +67,7 @@ def lookup(language, word):
         pass
     marker = "fr" if language == "fr" else "English"
     # Prefer lexical entries over an all-capitals acronym and preserve accents.
-    keys = sorted(dict.fromkeys(keys), key=lambda key: (key.isupper(), key == word.lower()))
+    keys = sorted(dict.fromkeys(keys), key=lambda key: (key[0].isupper(), key == word.lower()))
     for key in keys:
         try:
             html = fetch(base + "/w/rest.php/v1/page/" + quote(key, safe="") + "/html")
