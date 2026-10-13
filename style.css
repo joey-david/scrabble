@@ -605,6 +605,10 @@ fieldset {
 .move-preview.invalid {
   color: #e49b8e;
 }
+.move-preview:empty {
+  min-height: 8px;
+  margin-top: 5px;
+}
 .play-actions {
   display: flex;
   gap: 8px;

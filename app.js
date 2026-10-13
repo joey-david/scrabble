@@ -270,7 +270,7 @@ const definitionCache = new Map();
 const t = (key, values = {}) =>
   Object.entries(values).reduce(
     (s, [k, v]) => s.replaceAll(`{${k}}`, v),
-    messages[locale][key] || key,
+    messages[locale][key] ?? key,
   );
 const node = (tag, className = "", text = "") => {
   const el = document.createElement(tag);

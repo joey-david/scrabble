@@ -350,6 +350,9 @@ async function main() {
       false,
       "desktop game must fit one screen",
     );
+    await a.setViewportSize({width:1024,height:600});
+    assert.equal(await a.evaluate(() => document.documentElement.scrollHeight>innerHeight),false,'small desktop must fit one screen');
+    await a.setViewportSize({width:1280,height:900});
     await b.screenshot({
       path: path.join(out, "game-mobile.png"),
       fullPage: true,
@@ -359,6 +362,11 @@ async function main() {
       false,
       "mobile page overflows",
     );
+    for (const width of [320,360,430]) {
+      await b.setViewportSize({width,height:740});
+      assert.equal(await b.evaluate(() => document.documentElement.scrollWidth>innerWidth),false,`mobile width ${width} overflows`);
+    }
+    await b.setViewportSize({width:390,height:844});
     await b.locator("#zoom").tap();
     await b.screenshot({
       path: path.join(out, "game-mobile-zoom.png"),
