@@ -1,0 +1,19 @@
+[Unit]
+Description=French and English Scrabble at joeydavid.fyi/scrabble
+
+[Service]
+Type=simple
+WorkingDirectory=%h/joeydavid.fyi/services/scrabble
+ExecStart=/usr/bin/python3 %h/joeydavid.fyi/services/scrabble/server.py --port 6087
+Restart=on-failure
+RestartSec=2
+MemoryHigh=192M
+MemoryMax=256M
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/joeydavid.fyi/scrabble
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

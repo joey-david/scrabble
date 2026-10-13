@@ -24,4 +24,12 @@ Definitions come from Wiktionary, under its linked license, and never decide wor
 python3 -m unittest discover -s tests
 ```
 
+With Playwright installed, run the browser pass against the local server above:
+
+```sh
+node tests/browser.cjs
+```
+
+The browser pass creates an invite-only test room and seeds a conserved tile bag in `/tmp/scrabble.sqlite3` (set `SCRABBLE_TEST_STORAGE` to match your server). It checks two sessions, desktop and touch layouts, profile pictures, host settings, rejected and accepted words, blank moves, rack order, refresh recovery, definitions, focus presence, exchange, and pass. Screenshots stay in the ignored `test-results/` directory.
+
 Deployment uses the existing user service and Netlify proxy on joeydavid.fyi. Rooms and sessions persist in SQLite outside the source directory.

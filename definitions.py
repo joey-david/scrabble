@@ -53,7 +53,8 @@ class Senses(HTMLParser):
         if self.items and not self.items[-1]["done"] and not self.skip:
             value = " ".join("".join(self.items[-1]["parts"]).split())
             if len(value) > 8 and not value.startswith("Terms "):
-                self.senses.append(value[:350])
+                sentence = re.split(r"(?<=[.!?])\s+",value)[0]
+                self.senses.append(sentence if len(sentence) <= 240 else sentence[:237].rsplit(" ",1)[0]+"…")
             self.items[-1]["done"] = True
 
 

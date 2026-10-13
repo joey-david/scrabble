@@ -163,6 +163,7 @@ function tileElement(tile, className, button = true) {
 }
 
 function renderBoard() {
+  const hadFocus = $('board').contains(document.activeElement);
   const latest = room.history.filter(h => h.kind === 'play').at(-1);
   const recent = new Set(latest?.words.flatMap(w => w.cells) || []);
   const cells = Array.from({length:225},(_,pos) => {
@@ -171,7 +172,8 @@ function renderBoard() {
     const tile = room.board[pos] || (original && {...original,letter:draft.letter || original.letter,blank:original.letter === '?'});
     const premium = room.premiums[pos];
     const label = `${String.fromCharCode(65+pos%15)}${Math.floor(pos/15)+1}`;
-    const el = tile ? tileElement(tile,'cell tile') : node('button','cell',pos === 112 ? '✦' : premium || '');
+    const premiumLabel = room.settings.language === 'fr' ? {DL:'LD',TL:'LT',DW:'MD',TW:'MT'}[premium] : premium;
+    const el = tile ? tileElement(tile,'cell tile') : node('button','cell',pos === 112 ? '✦' : premiumLabel || '');
     el.dataset.pos = pos; el.dataset.premium = premium || ''; el.tabIndex = pos === cursor ? 0 : -1;
     el.classList.toggle('draft',Boolean(draft)); el.classList.toggle('blank',Boolean(tile?.blank));
     el.classList.toggle('last',recent.has(pos) && !draft); el.classList.toggle('selected',draft?.id === selected);
@@ -184,9 +186,11 @@ function renderBoard() {
     return el;
   });
   $('board').replaceChildren(...cells); $('direction').textContent = direction === 1 ? '→' : '↓';
+  if (hadFocus) $('board').querySelector(`[data-pos="${cursor}"]`)?.focus({preventScroll:true});
 }
 
 function renderRack() {
+  const focused = document.activeElement?.closest('.rack-tile')?.dataset.id;
   const rack = new Map((room.rack || []).map(tile => [tile.id,tile]));
   order = order.filter(id => rack.has(id)); rack.forEach((tile,id) => { if (!order.includes(id)) order.push(id); });
   localStorage.setItem(`scrabble-order-${room.id}-${room.me}`,JSON.stringify(order));
@@ -198,6 +202,7 @@ function renderRack() {
     el.addEventListener('click',() => { if (suppressClick) return; selected = selected === id ? null : id; renderRack(); renderBoard(); updateControls(); });
     el.addEventListener('pointerdown',event => beginDrag(event,id)); return el;
   }));
+  if (focused) [...$('rack').children].find(el => el.dataset.id === focused)?.focus({preventScroll:true});
 }
 
 function changedDrafts() { persistDrafts(); renderBoard(); renderRack(); updateControls(); schedulePreview(); }
@@ -222,10 +227,11 @@ function place(id,pos,letter) {
 
 function boardClick(pos) {
   cursor = pos;
-  if (!myTurn()) { renderBoard(); return; }
-  if (room.board[pos]) { selected = null; renderBoard(); renderRack(); notice(t('fixedTile')); return; }
+  if (!myTurn()) { focusCursor(); return; }
+  if (room.board[pos]) { selected = null; focusCursor(); renderRack(); notice(t('fixedTile')); return; }
   if (selected) place(selected,pos);
   else { selected = drafts.find(d => d.pos === pos)?.id || null; renderBoard(); renderRack(); updateControls(); }
+  if (!$('modal').open) focusCursor();
 }
 
 function moveCursor(step) {
@@ -303,6 +309,8 @@ function updateControls() {
   $('return-tile').disabled = !drafts.some(d => d.id === selected) || busy;
   $('reorder-left').disabled = order.indexOf(selected) <= 0 || busy;
   $('reorder-right').disabled = !selected || order.indexOf(selected) === order.length-1 || busy;
+  $('shuffle').disabled = !room.rack?.length || busy;
+  $('sort').disabled = !room.rack?.length || busy;
 }
 
 function schedulePreview() {
@@ -394,7 +402,8 @@ async function act(action,extra = {}) {
     if (action === 'play' || action === 'exchange' || action === 'pass') { drafts = []; persistDrafts(); }
     acceptRoom(value);
     if (action === 'settings') notice(t('saved'));
-  } catch (error) { notice(error.message,true); await poll(); }
+    return true;
+  } catch (error) { notice(error.message,true); await poll(); return false; }
   finally { busy = false; if (room) { if (room.status !== 'lobby') updateControls(); else $('start').disabled = room.players.length < 2; } }
 }
 
@@ -430,8 +439,8 @@ document.querySelectorAll('[data-locale]').forEach(button => button.addEventList
 $('settings-form').addEventListener('submit',event => { event.preventDefault(); act('settings',{settings:{language:$('game-language').value,minutes:Number($('minutes').value),turn_seconds:Number($('turn-seconds').value),random_first:$('random-first').checked,show_preview:$('show-preview').checked}}); });
 $('start').addEventListener('click',async () => {
   // Save the displayed settings so Start never silently uses an older choice.
-  await act('settings',{settings:{language:$('game-language').value,minutes:Number($('minutes').value),turn_seconds:Number($('turn-seconds').value),random_first:$('random-first').checked,show_preview:$('show-preview').checked}});
-  if (room.status === 'lobby') await act('start');
+  const saved = await act('settings',{settings:{language:$('game-language').value,minutes:Number($('minutes').value),turn_seconds:Number($('turn-seconds').value),random_first:$('random-first').checked,show_preview:$('show-preview').checked}});
+  if (saved && room.status === 'lobby') await act('start');
 });
 $('invite').addEventListener('click',async () => {
   try { await navigator.clipboard.writeText(roomUrl()); notice(t('copied')); }
