@@ -32,7 +32,9 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-The browser pass creates an invite-only test room and seeds a conserved tile bag in `/tmp/scrabble.sqlite3` (set `SCRABBLE_TEST_STORAGE` to match your server). It checks two sessions, desktop and touch layouts, profile pictures, host settings, rejected and accepted words, blank moves, rack order, refresh recovery, definitions, focus presence, exchange, and pass. Screenshots stay in the ignored `test-results/` directory.
+The browser pass creates an invite-only test room and seeds a conserved tile bag in `/tmp/scrabble.sqlite3` (set `SCRABBLE_TEST_STORAGE` to match your server). It checks two sessions, profiles, host settings, French and English moves, blanks, drag previews, desktop and native touch swaps, rack edge moves, refresh recovery, definitions, presence, exchange, pass, endings, rematches, and host transfer. It also checks that desktop games fit one screen and phone widths from 320 to 430 pixels do not overflow. Screenshots stay in the ignored `test-results/` directory.
+
+Set `SCRABBLE_TEST_URL=https://joeydavid.fyi/scrabble/` for a public-route pass. It uses ordinary racks and never seeds the live database. Both passes leave their test seats when they finish.
 
 Deployment uses the existing user service and Netlify proxy on joeydavid.fyi. Rooms and sessions persist in SQLite outside the source directory.
 

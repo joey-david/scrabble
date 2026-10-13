@@ -31,6 +31,15 @@ r['bag']=pool; r['rev']+=1; db.execute('UPDATE rooms SET state=? WHERE id=?',(js
 }
 
 async function dragTo(page, from, to) {
+  await page
+    .locator("#rack")
+    .evaluate(async (el) =>
+      Promise.all(
+        el
+          .getAnimations({ subtree: true })
+          .map((animation) => animation.finished.catch(() => {})),
+      ),
+    );
   await from.scrollIntoViewIfNeeded();
   const source = await from.boundingBox(),
     target = await to.boundingBox();
@@ -89,6 +98,15 @@ async function touchSwap(context, page) {
 }
 
 async function dragRackEdge(page, index, edge) {
+  await page
+    .locator("#rack")
+    .evaluate(async (el) =>
+      Promise.all(
+        el
+          .getAnimations({ subtree: true })
+          .map((animation) => animation.finished.catch(() => {})),
+      ),
+    );
   const source = await page.locator(".rack-tile").nth(index).boundingBox(),
     rack = await page.locator("#rack").boundingBox();
   await page.mouse.move(
@@ -254,6 +272,7 @@ async function main() {
         await a.locator(".rack-tile").first().getAttribute("data-id"),
         ids[0],
       );
+      await a.locator(".rack-tile.selected").click();
       // Invalid word: CTR is denied and stays editable.
       await a.locator('[data-pos="111"]').click();
       await a.locator('[data-pos="111"]').press("c");
@@ -326,7 +345,12 @@ async function main() {
         () => document.querySelector("#turn-label").textContent === "Your turn",
       );
       await touchSwap(contexts[1], b);
-      await b.locator('.rack-tile[data-id^="S"]').tap();
+      if (
+        (await b
+          .locator('.rack-tile[data-id^="S"]')
+          .getAttribute("aria-pressed")) !== "true"
+      )
+        await b.locator('.rack-tile[data-id^="S"]').tap();
       await b.locator('[data-pos="114"]').tap();
       await b.waitForFunction(() =>
         document.querySelector("#move-preview").textContent.includes("CATS"),
@@ -552,6 +576,9 @@ async function main() {
         : "PASS: two sessions, profiles, lobby, settings, English/French gameplay, drafts, definitions, focus, mobile layout, keyboard, drag, exchange, pass, resignation, end scores, rematch, host transfer.",
     );
   } finally {
+    await a
+      .screenshot({ path: path.join(out, "last-state.png"), fullPage: true })
+      .catch(() => {});
     for (const page of [a, b])
       await page
         .evaluate(async () => {
