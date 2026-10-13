@@ -184,13 +184,11 @@ async function eightPlayerLayout(browser) {
     ).json();
     code = first.id;
     await Promise.all(
-      players
-        .slice(1)
-        .map((player, i) =>
-          player.request.post(base + "api/join", {
-            data: { name: `P${i + 2}`, room: code },
-          }),
-        ),
+      players.slice(1).map((player, i) =>
+        player.request.post(base + "api/join", {
+          data: { name: `P${i + 2}`, room: code },
+        }),
+      ),
     );
     let room = await (
       await players[0].request.get(base + "api/room/" + code)
@@ -458,8 +456,10 @@ async function main() {
         .getByRole("button", { name: "Alice: Away from this page" })
         .waitFor({ timeout: 10000 });
       await b.getByRole("button", { name: "Alice: Away from this page" }).tap();
-      assert.equal(await b.locator("#modal").isVisible(), true);
-      await b.locator("#modal-close").tap();
+      assert.equal(
+        await b.locator("#notice").textContent(),
+        "Alice · Away from this page",
+      );
       await a.evaluate(() => {
         Object.defineProperty(document, "hasFocus", {
           value: () => true,

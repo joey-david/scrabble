@@ -49,8 +49,6 @@ const messages = {
     focus: "On this page",
     away: "Away from this page",
     offline: "Disconnected",
-    presenceHint:
-      "Focused means this page is visible and its window has focus. Away means another tab, window, or app has focus. Disconnected means no heartbeat for 35 seconds.",
     yourTurn: "Your turn",
     turnOf: "{name}’s turn",
     bag: "{count} left",
@@ -169,8 +167,6 @@ const messages = {
     focus: "Sur cette page",
     away: "A quitté cette page",
     offline: "Déconnecté",
-    presenceHint:
-      "Sur cette page : onglet visible et fenêtre active. Ailleurs : un autre onglet, une autre fenêtre ou une autre application est active. Déconnecté : aucun signe de connexion depuis 35 secondes.",
     yourTurn: "À vous de jouer",
     turnOf: "Tour de {name}",
     bag: "{count} restantes",
@@ -398,7 +394,7 @@ function playerNode(person, seat = false) {
   indicator.title = t(state);
   indicator.setAttribute("aria-label", `${person.name}: ${t(state)}`);
   indicator.addEventListener("click", () => {
-    dialog(t(state), [node("p", "", t("presenceHint"))]);
+    notice(`${person.name} · ${t(state)}`);
   });
   name.append(indicator);
   details.append(name);
